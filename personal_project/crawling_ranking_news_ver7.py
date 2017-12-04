@@ -16,6 +16,7 @@ from selenium.webdriver import ActionChains
 import pickle
 import chat_bot as cb
 import Database_Handler as dh
+from multiprocessing import Pool
 # [Default]
 def OpenAPI(apiFile):
     apiKey = pickle.load(open(apiFile, 'rb'))
@@ -377,10 +378,13 @@ def NewsArticleForDaum(cat, url):
                     loop = False
                 else:pass
             else:
-                if  len(commentElements) / numComment >= 0.8 and more_button_position == more_button.location:
-                    more_button_position_count -= 1
-                more_button_position = more_button.location
-                if more_button_position_count == -1 :
+                try:
+                    if  len(commentElements) / numComment >= 0.8 and more_button_position == more_button.location:
+                        more_button_position_count -= 1
+                    more_button_position = more_button.location
+                    if more_button_position_count == -1 :
+                        loop = False
+                except StaleElementReferenceException:
                     loop = False
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         driver.implicitly_wait(2)

@@ -192,8 +192,8 @@ def CommentInNaver(cat, url):
                                })
     driver.quit()
     commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
-    commentDf['Num_Comment'] = commentNum
-    commentDf['real_Num_Comment'] = len(commentDf)
+    commentsDf['Num_Comment'] = commentNum
+    commentsDf['real_Num_Comment'] = len(commentDf)
     print('Number of comment : {}'.format(len(commentsDf)))
     return commentsDf
 def ExtractElementFromRow(row):
@@ -345,30 +345,32 @@ def NewsArticleForDaum(cat, url):
         while loop:
             try:
                 commentsByclass = 'alex_more'
-                element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
+                element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
                 more_button = driver.find_element_by_class_name(commentsByclass)
                 driver.save_screenshot('screen2.png')
             except TimeoutException:
                 loop = False
             except NoSuchElementException:
                 try:
-                    element = WebDriverWait(driver, 5).until(EC.presence_of_element_located((By.CLASS_NAME, className)))
+                    element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, className)))
                     more_button.is_enabled()
                 except StaleElementReferenceException:
                     loop = False
                 else:pass
             else:
-                webdriver.ActionChains(driver).move_to_element(more_button).click(more_button).perform()
+                webdriver.ActionChains(driver).move_to_element(more_button).release(more_button).click(more_button).perform()
+                loop = more_button.is_enabled()
             driver.save_screenshot('screen3.png')
+        driver.implicitly_wait(2)
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        time.sleep(3)
+        driver.implicitly_wait(2)
         driver.quit()
         comment_box = soup.find('ul',class_='list_comment')
         comment_Df = comment_box.select('li')
         comment_Df = pd.DataFrame(comment_Df)
         comment_Df.rename({0:'comments'}, axis = 1,inplace = True)
         comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
-        comment_df['Num_Comment'] = numComment
+        comment_Df['Num_Comment'] = numComment
         comment_Df['real_Num_Comment'] = len(comment_Df)
         print('End : Click More Button & Crawling comment')
         print('Number of comment : {}'.format(len(comment_Df)))

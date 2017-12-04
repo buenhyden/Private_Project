@@ -17,6 +17,7 @@ import pickle
 import chat_bot as cb
 import Database_Handler as dh
 from multiprocessing import Pool
+from functools import partial
 # [Default]
 def OpenAPI(apiFile):
     apiKey = pickle.load(open(apiFile, 'rb'))
@@ -353,7 +354,7 @@ def NewsArticleForDaum(cat, url):
     else:
         loop = True
         more_button_position = 0
-        more_button_position_count = 30
+        more_button_position_count = 10
         while loop:
             try:
                 commentsByclass = 'alex_more'
@@ -471,5 +472,7 @@ def Main(site,db_name):
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
 if __name__ == "__main__":
-    Main('daum', 'hy_db')
-    Main('naver', 'hy_db')
+    datas = ('daum','naver')
+    p = Pool(2)
+    x = partial(Main, db_name='hy_db')
+    p.map(x, datas)
