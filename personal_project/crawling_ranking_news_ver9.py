@@ -203,6 +203,7 @@ def CommentInNaver(cat, url):
     driver.quit()
     commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
     print('naver Number of comment : {}'.format(len(commentsDf)))
+    print ('naver End')
     return commentsDf, commentNum, len(commentsDf)
 def ExtractElementFromRow(row):
     row['comments'] = row['comments'].text
@@ -401,6 +402,7 @@ def NewsArticleForDaum(cat, url):
         comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
         print('daum End : Click More Button & Crawling comment')
         print('daum Number of comment : {}'.format(len(comment_Df)))
+        print ('daum End')
     return keywords, article, comment_Df, numComment, len(comment_Df)
 # Run in Daum
 def Main_Daum():
