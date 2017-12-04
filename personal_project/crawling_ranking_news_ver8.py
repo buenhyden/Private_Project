@@ -177,12 +177,16 @@ def CommentInNaver(cat, url):
                 webdriver.ActionChains(driver).move_to_element(moreComment).click(moreComment).perform()
             except NoSuchElementException:
                 loop = False
+            except TimeoutException:
+                loop = False
         except StaleElementReferenceException:
             try:
                 element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentMore)))
                 moreComment = driver.find_element_by_class_name(commentMore)
                 webdriver.ActionChains(driver).move_to_element(moreComment).click(moreComment).perform()
             except StaleElementReferenceException:
+                loop = False
+            except TimeoutException:
                 loop = False
         else:
             webdriver.ActionChains(driver).move_to_element(moreComment).click(moreComment).perform()

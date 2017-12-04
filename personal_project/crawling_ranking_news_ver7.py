@@ -184,6 +184,8 @@ def CommentInNaver(cat, url):
                 webdriver.ActionChains(driver).move_to_element(moreComment).click(moreComment).perform()
             except StaleElementReferenceException:
                 loop = False
+            except TimeoutException:
+                loop = False
         else:
             webdriver.ActionChains(driver).move_to_element(moreComment).click(moreComment).perform()
             if moreComment.get_attribute('style') != '':
