@@ -164,8 +164,8 @@ def CommentInNaver(cat, url):
     element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentNumByClass)))
     commentNum = driver.find_element_by_class_name(commentNumByClass).text
     commentNum = ''.join(commentNum.split(','))
-    print('Number of comment : {}'.format(commentNum))
-    print('Start : Click More Button')
+    print('naver Information Number of comment : {}'.format(commentNum))
+    print('naver Start : Click More Button')
     loop = True
     while loop == True:
         try:
@@ -194,7 +194,7 @@ def CommentInNaver(cat, url):
             webdriver.ActionChains(driver).move_to_element(moreComment).click(moreComment).perform()
             if moreComment.get_attribute('style') != '':
                 loop = False
-    print('End Click More Button & Start Crawling comments')
+    print('naver End Click More Button & Start Crawling comments')
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     commentsDf = pd.DataFrame({'comments': soup.find_all(class_='u_cbox_contents'),
                                '공감': soup.find_all(class_='u_cbox_btn_recomm'),
@@ -202,7 +202,7 @@ def CommentInNaver(cat, url):
                                })
     driver.quit()
     commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
-    print('Number of comment : {}'.format(len(commentsDf)))
+    print('naver Number of comment : {}'.format(len(commentsDf)))
     return commentsDf, commentNum, len(commentsDf)
 def ExtractElementFromRow(row):
     row['comments'] = row['comments'].text
@@ -229,7 +229,7 @@ def Main_Naver():
     for idx in categoryInRankingNews.index:
         data = categoryInRankingNews.loc[idx]
         category = data['category']
-        print(category)
+        print('{} : {}'.format('Naver',category))
         link = data['link']
         newsList = NewsListInCategoryForNaver(targetDate, basePage, category, link)
         newsList = pd.concat([pd.DataFrame([category] * len(newsList), columns=['category']), newsList], axis=1)
@@ -241,7 +241,7 @@ def Main_Naver():
             newsInfo = ArticleInNaver(category, newsList.loc[idx2]['link'])
             newsList.loc[idx2, 'press'] = newsInfo[1]
             newsList.loc[idx2, 'mainText'] = newsInfo[0]
-            print(idx2, newsList.loc[idx2]['link'])
+            print('{} : {}, {}'.format('Naver', idx2, newsList.loc[idx2]['link']))
             comments, commentNum, num_commentDf = CommentInNaver(category, newsList.loc[idx2]['link'])
             newsList.loc[idx2, 'number_of_comment'] = commentNum
             newsList.loc[idx2, 'real_number_of_comment'] = num_commentDf
@@ -328,13 +328,13 @@ def NewsArticleForDaum(cat, url):
     driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     #driver = webdriver.Chrome('../chromedriver')
     driver.get(url)
-    print('Start : Search Main Text')
+    print('daum Start : Search Main Text')
     element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'article_view')))
     article = driver.find_element_by_class_name('article_view')
     article = article.find_elements_by_tag_name('p')
     article = '\s'.join(list(map(lambda x: x.text.strip(), article)))
-    print('End : Search Main Text')
-    print('Start : Search Keywords')
+    print('daum End : Search Main Text')
+    print('daum Start : Search Keywords')
     if isElementPresent(driver, 'tag_relate') == False:
         keywords = 'NaN'
     else:
@@ -342,11 +342,11 @@ def NewsArticleForDaum(cat, url):
         keywords = driver.find_elements_by_class_name('tag_relate')
         keywords = list(map(lambda x: x.text, keywords))
         keywords = list(map(lambda x: re.sub('#', '', x), keywords))
-    print('End : Search Keywords')
+    print('daum End : Search Keywords')
     element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'num_count')))
     numComment = int(driver.find_element_by_class_name('num_count').text)
-    print('Number of comment : {}'.format(numComment))
-    print('Start : Click More Button & Crawling comment')
+    print('daum information Number of comment : {}'.format(numComment))
+    print('daum Start : Click More Button & Crawling comment')
     try:
         element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.ID, 'alex-area')))
     except:
@@ -354,7 +354,7 @@ def NewsArticleForDaum(cat, url):
     else:
         loop = True
         more_button_position = 0
-        more_button_position_count = 10
+        more_button_position_count = 30
         while loop:
             try:
                 commentsByclass = 'alex_more'
@@ -399,8 +399,8 @@ def NewsArticleForDaum(cat, url):
         comment_Df = pd.DataFrame(comment_Df)
         comment_Df.rename({0:'comments'}, axis = 1,inplace = True)
         comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
-        print('End : Click More Button & Crawling comment')
-        print('Number of comment : {}'.format(len(comment_Df)))
+        print('daum End : Click More Button & Crawling comment')
+        print('daum Number of comment : {}'.format(len(comment_Df)))
     return keywords, article, comment_Df, numComment, len(comment_Df)
 # Run in Daum
 def Main_Daum():
@@ -414,7 +414,7 @@ def Main_Daum():
     for idx in linkForCategory.index:
         data = linkForCategory.loc[idx]
         category = data['category']
-        print (category)
+        print('{} : {}'.format('Daum', category))
         link = data['link']
         newsList = NewsListInCategoryForDaum(targetDate, category, link)
         newsList['mainText'] = ''
@@ -423,7 +423,7 @@ def Main_Daum():
         newsList['real_number_of_comment'] = ''
         for idx2 in newsList.index:
             newsLink = newsList.loc[idx2]['link']
-            print(idx2, newsLink)
+            print('{} : {}, {}'.format('Daum', idx2, newsLink))
             keywords, article, comments, numComment, num_comment_Df= NewsArticleForDaum(category, newsLink)
             newsList.loc[idx2, 'keywords'] = keywords
             newsList.loc[idx2, 'mainText'] = article
