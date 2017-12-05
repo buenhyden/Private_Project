@@ -354,46 +354,59 @@ def NewsArticleForDaum(cat, url):
         pass
     else:
         loop = True
-        more_button_position = 0
-        more_button_position_count = 30
+        more_button_position = 4513
+        more_button_position_count = 20
         while loop:
             try:
                 commentsByclass = 'alex_more'
-                element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
+                element = WebDriverWait(driver, 3).until(
+                    EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
                 more_button = driver.find_element_by_class_name(commentsByclass)
                 webdriver.ActionChains(driver).move_to_element(more_button).click(more_button).perform()
                 commentElements = driver.find_elements_by_class_name('cmt_info')
                 more_button.is_displayed()
-            except TimeoutException:
-                loop = False
-            except NoSuchElementException:
+            except:
                 try:
-                    element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
-                except StaleElementReferenceException:
-                    loop = False
+                    element = WebDriverWait(driver, 1.5).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
                 except NoSuchElementException:
                     loop = False
-                else:pass
-            except StaleElementReferenceException:
-                try:
-                    element = WebDriverWait(driver, 3).until(
-                    EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
                 except StaleElementReferenceException:
                     loop = False
                 except TimeoutException:
                     loop = False
-                else:pass
+                else:
+                    if more_button_position == more_button.location['y']:
+                        more_button_position_count -= 1
+                    more_button_position = more_button.location['y']
+                    if more_button_position_count == 0:
+                        loop = False
             else:
                 try:
-                    if  len(commentElements) / numComment >= 0.8 and more_button_position == more_button.location:
-                        more_button_position_count -= 1
-                    more_button_position = more_button.location
-                    if more_button_position_count == -1 :
+                    element = WebDriverWait(driver, 1).until(
+                        EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
+                except:
+                    try:
+                        element = WebDriverWait(driver, 1).until(
+                            EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
+                    except NoSuchElementException:
                         loop = False
-                except StaleElementReferenceException:
-                    loop = False
+                    except StaleElementReferenceException:
+                        loop = False
+                    except TimeoutException:
+                        loop = False
+                    else:
+                        if more_button_position == more_button.location['y']:
+                            more_button_position_count -= 1
+                        more_button_position = more_button.location['y']
+                        if more_button_position_count == 0:
+                            loop = False
                 else:
-                    pass
+                    if more_button_position == more_button.location['y']:
+                        more_button_position_count -= 1
+                    more_button_position = more_button.location['y']
+                    if more_button_position_count == 0:
+                        loop = False
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         driver.quit()
         comment_box = soup.find('ul',class_='list_comment')
@@ -479,6 +492,7 @@ def Main(site,db_name, runDate, xdaysAgo):
 if __name__ == "__main__":
     runDate = datetime.now().date()
     datas = ('daum','naver')
-    p = Pool(2)
-    x = partial(Main, db_name='hy_db',runDate = runDate, xdaysAgo = 6)
-    p.map(x, datas)
+    for idx in range(5, 0, -1):
+        p = Pool(2)
+        x = partial(Main, db_name='hy_db',runDate = runDate, xdaysAgo = idx)
+        p.map(x, datas)
