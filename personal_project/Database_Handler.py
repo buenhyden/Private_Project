@@ -21,3 +21,8 @@ def Use_Collection(db, collectionName):
 
 def Close_db(db):
     db.close()
+if __name__ == "__main__":
+    db_name = 'hy_db'
+    mongodb = ToMongoDB(*AWS_MongoDB_Information())
+    dbname = db_name
+    useDb = Use_Database(mongodb, dbname)

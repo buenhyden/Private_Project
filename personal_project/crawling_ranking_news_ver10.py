@@ -56,16 +56,12 @@ def Resource_Naver():
     targetPage = 'http://news.naver.com/main/ranking/popularDay.nhn?'
     return apiInfo, basePage, targetPage
 # Search for Date
-def SearchDateForNaver(mainpage, url):
+def SearchDateForNaver(targetDate, mainpage, url):
     webpage = WebPageUsingBS(url, 'xml')
     dateInfo = webpage.find('div', class_='calendar_date')
-    today = dateInfo.find(class_='c_date').text
-    yesterdayPage = dateInfo.find('a').attrs['href']
-    targetPage = mainpage + yesterdayPage
-    webpage2 = WebPageUsingBS(targetPage, 'xml')
-    dateInfo2 = webpage2.find('div', class_='calendar_date')
-    targetDate = dateInfo2.find(class_='c_date').text
-    return targetDate, today, targetPage
+    hrefPath = dateInfo.find('a').attrs['href']
+    targetPage = mainpage + hrefPath + '&date=' + targetDate.strftime('%Y%m%d')
+    return targetPage
 # Search for category Name & web path
 def SearchTargetForNaver(date, mainpage, form):
     category = re.search(r'[a-zA-Z가-힣/]+', form.text).group()
@@ -238,10 +234,10 @@ def ExtractComments(class1, class2):
         pass
     return pd.DataFrame({'comments': commentText, r'공감': recomm, r'비공감': unrecomm})
 # Run in Naver
-def Main_Naver():
+def Main_Naver(todayDate):
     naverAPI, basePage, targetPage = Resource_Naver()
-    targetDate, todayDate, pageForTargetDate = SearchDateForNaver(basePage, targetPage)
-    print('Site : {}, Run Date : {}, Goal Date : {}'.format('Naver', todayDate, targetDate))
+    pageForTargetDate = SearchDateForNaver(basePage, targetPage)
+    print('Site : {}, Run Date : {}, Goal Date : {}'.format('Naver', todayDate.date().strftime('%Y.%m.%d'), targetDate))
     categoryInRankingNews = CategoryWebPathForNaver(targetDate, basePage, pageForTargetDate)
     outNews = pd.DataFrame()
     outComment = pd.DataFrame()
@@ -424,7 +420,7 @@ def NewsArticleForDaum(cat, url):
         print ('daum End')
     return keywords, article, comment_Df, numComment, len(comment_Df)
 # Run in Daum
-def Main_Daum():
+def Main_Daum(date):
     print('{}'.format('Daum'))
     mainPage, rankPage, runDate = Resource_Daum()
     todayDate, linkForTargetDate = SearchDateForDaum(rankPage)
@@ -463,17 +459,17 @@ def Main_Daum():
     outComment.reset_index(drop=True, inplace=True)
     return outNews, outComment
 
-def Main(site,db_name):
+def Main(site,db_name, date):
     mongodb = dh.ToMongoDB(*dh.AWS_MongoDB_Information())
     dbname = db_name
     useDb = dh.Use_Database(mongodb, dbname)
     slack = cb.Slacker(cb.slacktoken())
     startTime = datetime.now()
     if site.lower() == 'naver':
-        newsDf, commentsDf = Main_Naver()
+        newsDf, commentsDf = Main_Naver(date)
         newsCollectionName = 'newsDaum'
     elif site.lower() == 'daum':
-        newsDf, commentsDf = Main_Daum()
+        newsDf, commentsDf = Main_Daum(date)
         newsCollectionName = 'newsNaver'
     else:
         raise NotMatch('Not Match site')
@@ -494,8 +490,8 @@ def Main(site,db_name):
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
 if __name__ == "__main__":
-    target_Date = datetime.now()
+    runDate = datetime.now()
     datas = ('daum','naver')
     p = Pool(2)
-    x = partial(Main, db_name='hy_db')
+    x = partial(Main, db_name='hy_db',date = runDate)
     p.map(x, datas)
