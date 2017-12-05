@@ -483,9 +483,12 @@ def Main(site,db_name, runDate, xdaysAgo):
     print ('End Uploading')
     endTime = datetime.now()
     uploadTime = endTime - middleTime
+    targetDate = runDate - timedelta(days=xdaysAgo)
     outcome_info = '{}, news : {}, comment : {}'.format(site, len(newsDf), len(commentsDf))
+    date_info = 'run date : {}, target date : {}'.format(runDate.strftime('%Y%m%d'), targetDate.strftime('%Y%m%d'))
     time_info = 'running time : {}, uploading time'.format(runningTime, uploadTime)
     slack.chat.post_message('# general', outcome_info)
+    slack.chat.post_message('# general', date_info)
     slack.chat.post_message('# general', time_info)
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
