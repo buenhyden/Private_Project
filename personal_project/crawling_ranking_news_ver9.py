@@ -78,7 +78,7 @@ def SearchTargetForNaver(date, mainpage, form):
 # Search for category web path
 def CategoryWebPathForNaver(date, mainpage, url):
     webPage = WebPageUsingBS(url, 'xml')
-    category = webPage.find('ul', class_='massmedia').findAll('li')[1:-2]
+    category = webPage.find('ul', class_='massmedia').find_all('li')[1:-2]
     outDf = pd.DataFrame(list(map(lambda x: SearchTargetForNaver(date, mainpage, x), category)))
     return outDf
 # Search for news list in category
@@ -161,9 +161,16 @@ def CommentInNaver(cat, url):
     element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentByClass)))
     moreCommentPage = driver.find_element_by_class_name(commentByClass)
     webdriver.ActionChains(driver).move_to_element(moreCommentPage).click(moreCommentPage).perform()
-    element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentNumByClass)))
-    commentNum = driver.find_element_by_class_name(commentNumByClass).text
-    commentNum = ''.join(commentNum.split(','))
+    try:
+        element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentNumByClass)))
+        commentNum = driver.find_element_by_class_name(commentNumByClass).text
+        commentNum = ''.join(commentNum.split(','))
+    except NoSuchElementException:
+        element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentNumByClass)))
+        commentNum = driver.find_element_by_class_name(commentNumByClass).text
+        commentNum = ''.join(commentNum.split(','))
+    else:
+        pass
     print('naver Information Number of comment : {}'.format(commentNum))
     print('naver Start : Click More Button')
     loop = True
@@ -196,9 +203,12 @@ def CommentInNaver(cat, url):
                 loop = False
     print('naver End Click More Button & Start Crawling comments')
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    commentsDf = pd.DataFrame({'comments': soup.find_all(class_='u_cbox_contents'),
-                               '공감': soup.find_all(class_='u_cbox_btn_recomm'),
-                               '비공감': soup.find_all(class_='u_cbox_btn_unrecomm')
+    commentsDf = pd.DataFrame({'comments': soup.select(
+        '#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span'),
+                               '공감': soup.select(
+                                   '#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_recomm'),
+                               '비공감': soup.select(
+                                   '#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_unrecomm')
                                })
     driver.quit()
     commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
@@ -368,13 +378,13 @@ def NewsArticleForDaum(cat, url):
                 loop = False
             except NoSuchElementException:
                 try:
-                    element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
+                    element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
                 except StaleElementReferenceException:
                     loop = False
                 else:pass
             except StaleElementReferenceException:
                 try:
-                    element = WebDriverWait(driver, 3).until(
+                    element = WebDriverWait(driver, 2).until(
                     EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
                 except StaleElementReferenceException:
                     loop = False
@@ -393,7 +403,6 @@ def NewsArticleForDaum(cat, url):
                 else:
                     pass
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        driver.implicitly_wait(2)
         driver.quit()
         comment_box = soup.find('ul',class_='list_comment')
         comment_Df = comment_box.select('li')
