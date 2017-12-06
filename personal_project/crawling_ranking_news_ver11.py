@@ -354,7 +354,7 @@ def NewsArticleForDaum(cat, url):
         pass
     else:
         loop = True
-        more_button_position = 4513
+        more_button_position = 0
         more_button_position_count = 20
         while loop:
             try:
@@ -376,11 +376,7 @@ def NewsArticleForDaum(cat, url):
                 except TimeoutException:
                     loop = False
                 else:
-                    if more_button_position == more_button.location['y']:
-                        more_button_position_count -= 1
-                    more_button_position = more_button.location['y']
-                    if more_button_position_count == 0:
-                        loop = False
+                    pass
             else:
                 try:
                     element = WebDriverWait(driver, 1).until(
@@ -396,14 +392,13 @@ def NewsArticleForDaum(cat, url):
                     except TimeoutException:
                         loop = False
                     else:
-                        if more_button_position == more_button.location['y']:
-                            more_button_position_count -= 1
-                        more_button_position = more_button.location['y']
-                        if more_button_position_count == 0:
-                            loop = False
+                        pass
                 else:
                     if more_button_position == more_button.location['y']:
-                        more_button_position_count -= 1
+                        if len(commentElements) / numComment >= 0.7:
+                            more_button_position_count -= 1
+                        else:
+                            more_button_position_count -= 0.5
                     more_button_position = more_button.location['y']
                     if more_button_position_count == 0:
                         loop = False
@@ -492,10 +487,10 @@ def Main(site,db_name, runDate, xdaysAgo):
     slack.chat.post_message('# general', time_info)
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
+import sys
 if __name__ == "__main__":
+    site = sys.argv[1]
+    xdaysAgo = sys.argv[2]
+    xdaysAgo = int(xdaysAgo)
     runDate = datetime.now().date()
-    datas = ('daum','naver')
-    for idx in range(5, 0, -1):
-        p = Pool(2)
-        x = partial(Main, db_name='hy_db',runDate = runDate, xdaysAgo = idx)
-        p.map(x, datas)
+    Main(site, 'hy_db', runDate, xdaysAgo)
