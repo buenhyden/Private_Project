@@ -204,7 +204,7 @@ def CommentInNaver(cat, url):
                 loop = False
     print('naver End Click More Button & Start Crawling comments')
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    commentsDf = pd.DataFrame({'comments': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span'),
+    commentsDf = pd.DataFrame({'comments': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span.u_cbox_contents'),
                                '공감': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_recomm'),
                                '비공감': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_unrecomm')
                                })
@@ -387,14 +387,21 @@ def NewsArticleForDaum(cat, url):
                     else:
                         pass
                 else:
-                    if more_button_position == more_button.location['y']:
-                        if len(commentElements) / numComment >= 0.7:
-                            more_button_position_count -= 1
-                        else:
-                            more_button_position_count -= 0.5
-                    more_button_position = more_button.location['y']
-                    if more_button_position_count <= 0:
+                    try:
+                        more_button.is_displayed()
+                    except StaleElementReferenceException:
                         loop = False
+                    except NoSuchElementException:
+                        loop = False
+                    else:
+                        if more_button_position == more_button.location['y']:
+                            if len(commentElements) / numComment >= 0.7:
+                                more_button_position_count -= 1
+                            else:
+                                more_button_position_count -= 0.5
+                        more_button_position = more_button.location['y']
+                        if more_button_position_count <= 0:
+                            loop = False
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         driver.quit()
         comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
