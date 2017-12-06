@@ -19,14 +19,6 @@ import Database_Handler as dh
 from multiprocessing import Pool
 from functools import partial
 # [Default]
-def OS_Driver(os):
-    if os.lower() == 'windows':
-        driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
-    elif os.lower() == 'mac':
-        driver = webdriver.Chrome('../chromedriver')
-    return driver
-
-
 def OpenAPI(apiFile):
     apiKey = pickle.load(open(apiFile, 'rb'))
     return apiKey
@@ -89,8 +81,8 @@ def CategoryWebPathForNaver(date, mainpage, url):
 # Search for news list in category
 def NewsListInCategoryForNaver(date, mainpage, cat, url):
     if cat == r'연예':
-        global os
-        driver = OS_Driver(os)
+        driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+        #driver = webdriver.Chrome('../chromedriver')
         driver.get(url)
         newsSelector = '#ranking_list > li > div.tit_area'
         element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CSS_SELECTOR, newsSelector)))
@@ -133,7 +125,6 @@ def FilterMainText(contents):
     return mainText
 # Search for News Article & Press
 def ArticleInNaver(cat, url):
-    articleIdList = ['articeBody', 'newsEndContents', 'articleBodyContents']
     if cat == r'연예':
         mainTextId = 'articeBody';
         pressClass = 'press_logo'
@@ -144,23 +135,15 @@ def ArticleInNaver(cat, url):
         mainTextId = 'articleBodyContents';
         pressClass = 'press_logo'
     webPage = WebPageUsingBS(url, 'xml')
-    try:
-        mainText = FilterMainText(webPage.find('div', id=mainTextId))
-    except AttributeError:
-        articleIdList.remove(mainTextId)
-        try:
-            mainText = FilterMainText(webPage.find('div', id=articleIdList[0]))
-        except AttributeError:
-                mainText = FilterMainText(webPage.find('div', id=articleIdList[1]))
-        else:pass
-    else:pass
+    mainText = webPage.find('div', id=mainTextId)
+    mainText = FilterMainText(mainText)
     press = webPage.find(class_=pressClass)
     press = press.find('img').attrs['alt']
     return mainText, press
 # Search for Comment
 def CommentInNaver(cat, url):
-    global os
-    driver = OS_Driver(os)
+    #driver = webdriver.Chrome('../chromedriver')
+    driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     if cat == r'연예':
         commentByClass = 'reply_count';
         commentNumByClass = 'u_cbox_count'
@@ -172,24 +155,9 @@ def CommentInNaver(cat, url):
         commentNumByClass = 'u_cbox_count'
     commentMore = 'u_cbox_paginate'
     driver.get(url)
-    commentClassList = ['reply_count', 'comment', 'pi_btn_count']
-    try:
-        element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentByClass)))
-        moreCommentPage = driver.find_element_by_class_name(commentByClass)
-        webdriver.ActionChains(driver).move_to_element(moreCommentPage).click(moreCommentPage).perform()
-    except TimeoutException:
-        commentClassList.remove(commentByClass)
-        try:
-            element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentClassList[0])))
-            moreCommentPage = driver.find_element_by_class_name(commentClassList[0])
-            webdriver.ActionChains(driver).move_to_element(moreCommentPage).click(moreCommentPage).perform()
-        except TimeoutException:
-            element = WebDriverWait(driver, 3).until(
-                EC.presence_of_element_located((By.CLASS_NAME, commentClassList[1])))
-            moreCommentPage = driver.find_element_by_class_name(commentClassList[1])
-            webdriver.ActionChains(driver).move_to_element(moreCommentPage).click(moreCommentPage).perform()
-        else:pass
-    else:pass
+    element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentByClass)))
+    moreCommentPage = driver.find_element_by_class_name(commentByClass)
+    webdriver.ActionChains(driver).move_to_element(moreCommentPage).click(moreCommentPage).perform()
     try:
         element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentNumByClass)))
         commentNum = driver.find_element_by_class_name(commentNumByClass).text
@@ -236,15 +204,22 @@ def CommentInNaver(cat, url):
                 loop = False
     print('naver End Click More Button & Start Crawling comments')
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    commentsDf = pd.DataFrame({'comments': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span.u_cbox_contents'),
+    try:
+        commentsDf = pd.DataFrame({'comments': soup.find_all(class_='u_cbox_contents'),
+                                   '공감': soup.find_all(class_='u_cbox_btn_recomm'),
+                                   '비공감': soup.find_all(class_='u_cbox_btn_unrecomm')
+                                   })
+    except ValueError:
+        commentsDf = pd.DataFrame({'comments': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span'),
                                '공감': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_recomm'),
                                '비공감': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_unrecomm')
                                })
+    else:pass
     driver.quit()
     commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
     print('naver Number of comment : {}'.format(len(commentsDf)))
     print ('naver End')
-    return commentsDf, int(commentNum), len(commentsDf)
+    return commentsDf, commentNum, len(commentsDf)
 def ExtractElementFromRow(row):
     row['comments'] = row['comments'].text
     row['공감'] = row['공감'].select_one('em').text
@@ -351,8 +326,8 @@ def isElementPresent(driver, locator):
     return True
 # Search for article in news
 def NewsArticleForDaum(cat, url):
-    global os
-    driver = OS_Driver(os)
+    driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+    #driver = webdriver.Chrome('../chromedriver')
     driver.get(url)
     print('daum Start : Search Main Text')
     element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'article_view')))
@@ -364,12 +339,12 @@ def NewsArticleForDaum(cat, url):
     if isElementPresent(driver, 'tag_relate') == False:
         keywords = 'NaN'
     else:
-        element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
+        element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
         keywords = driver.find_elements_by_class_name('tag_relate')
         keywords = list(map(lambda x: x.text, keywords))
         keywords = list(map(lambda x: re.sub('#', '', x), keywords))
     print('daum End : Search Keywords')
-    element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'num_count')))
+    element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'num_count')))
     numComment = int(driver.find_element_by_class_name('num_count').text)
     print('daum information Number of comment : {}'.format(numComment))
     print('daum Start : Click More Button & Crawling comment')
@@ -379,7 +354,7 @@ def NewsArticleForDaum(cat, url):
         pass
     else:
         loop = True
-        more_button_position = 0
+        more_button_position = 4513
         more_button_position_count = 20
         while loop:
             try:
@@ -419,31 +394,25 @@ def NewsArticleForDaum(cat, url):
                     else:
                         pass
                 else:
-                    try:
-                        more_button.is_displayed()
-                    except StaleElementReferenceException:
+                    if more_button_position == more_button.location['y']:
+                        if len(commentElements) / numComment >= 0.7:
+                            more_button_position_count -= 1
+                        else:
+                            more_button_position_count -= 0.5
+                    more_button_position = more_button.location['y']
+                    if more_button_position_count == 0:
                         loop = False
-                    except NoSuchElementException:
-                        loop = False
-                    else:
-                        if more_button_position == more_button.location['y']:
-                            if len(commentElements) / numComment >= 0.7:
-                                more_button_position_count -= 1
-                            else:
-                                more_button_position_count -= 0.5
-                        more_button_position = more_button.location['y']
-                        if more_button_position_count <= 0:
-                            loop = False
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         driver.quit()
-        comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
+        comment_box = soup.find('ul',class_='list_comment')
+        comment_Df = comment_box.select('li')
         comment_Df = pd.DataFrame(comment_Df)
         comment_Df.rename({0:'comments'}, axis = 1,inplace = True)
         comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
         print('daum End : Click More Button & Crawling comment')
         print('daum Number of comment : {}'.format(len(comment_Df)))
         print ('daum End')
-    return keywords, article, comment_Df, int(numComment), len(comment_Df)
+    return keywords, article, comment_Df, numComment, len(comment_Df)
 # Run in Daum
 def Main_Daum(runDate, xdaysAgo):
     print('{}'.format('Daum'))
@@ -466,6 +435,7 @@ def Main_Daum(runDate, xdaysAgo):
         newsList['number_of_comment'] = ''
         newsList['real_number_of_comment'] = ''
         for idx2 in newsList.index:
+            idx2 = 9
             newsLink = newsList.loc[idx2]['link']
             print('{} : {}, {}'.format('Daum', idx2, newsLink))
             keywords, article, comments, numComment, num_comment_Df= NewsArticleForDaum(category, newsLink)
@@ -493,10 +463,10 @@ def Main(site,db_name, runDate, xdaysAgo):
     startTime = datetime.now()
     if site.lower() == 'naver':
         newsDf, commentsDf = Main_Naver(runDate, xdaysAgo)
-        newsCollectionName = 'newsNaver'
+        newsCollectionName = 'newsDaum'
     elif site.lower() == 'daum':
         newsDf, commentsDf = Main_Daum(runDate, xdaysAgo)
-        newsCollectionName = 'newsDaum'
+        newsCollectionName = 'newsNaver'
     else:
         raise NotMatch('Not Match site')
     middleTime = datetime.now()
@@ -518,12 +488,12 @@ def Main(site,db_name, runDate, xdaysAgo):
     slack.chat.post_message('# general', time_info)
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
-os = 'windows'
+import sys
 if __name__ == "__main__":
-    site = sys.argv[1]
-    xdaysAgo = sys.argv[2]
-    #site = 'naver'
-    #xdaysAgo = '5'
+    #site = sys.argv[1]
+    #xdaysAgo = sys.argv[2]
+    site ='daum'
+    xdaysAgo = '5'
     xdaysAgo = int(xdaysAgo)
     runDate = datetime.now().date()
     Main(site, 'hy_db', runDate, xdaysAgo)

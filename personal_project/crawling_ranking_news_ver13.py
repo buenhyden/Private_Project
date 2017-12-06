@@ -380,7 +380,7 @@ def NewsArticleForDaum(cat, url):
     else:
         loop = True
         more_button_position = 0
-        more_button_position_count = 20
+        more_button_position_count = 10
         while loop:
             try:
                 commentsByclass = 'alex_more'
@@ -427,10 +427,10 @@ def NewsArticleForDaum(cat, url):
                         loop = False
                     else:
                         if more_button_position == more_button.location['y']:
-                            if len(commentElements) / numComment >= 0.7:
+                            if len(commentElements) / numComment >= 0.5:
                                 more_button_position_count -= 1
                             else:
-                                more_button_position_count -= 0.5
+                                more_button_position_count -= 0.25
                         more_button_position = more_button.location['y']
                         if more_button_position_count <= 0:
                             loop = False
