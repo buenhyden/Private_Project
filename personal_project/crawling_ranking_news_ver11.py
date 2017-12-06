@@ -81,8 +81,8 @@ def CategoryWebPathForNaver(date, mainpage, url):
 # Search for news list in category
 def NewsListInCategoryForNaver(date, mainpage, cat, url):
     if cat == r'연예':
-        driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
-        #driver = webdriver.Chrome('../chromedriver')
+        #driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+        driver = webdriver.Chrome('../chromedriver')
         driver.get(url)
         newsSelector = '#ranking_list > li > div.tit_area'
         element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CSS_SELECTOR, newsSelector)))
@@ -142,8 +142,8 @@ def ArticleInNaver(cat, url):
     return mainText, press
 # Search for Comment
 def CommentInNaver(cat, url):
-    #driver = webdriver.Chrome('../chromedriver')
-    driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+    driver = webdriver.Chrome('../chromedriver')
+    #driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     if cat == r'연예':
         commentByClass = 'reply_count';
         commentNumByClass = 'u_cbox_count'
@@ -204,22 +204,15 @@ def CommentInNaver(cat, url):
                 loop = False
     print('naver End Click More Button & Start Crawling comments')
     soup = BeautifulSoup(driver.page_source, 'html.parser')
-    try:
-        commentsDf = pd.DataFrame({'comments': soup.find_all(class_='u_cbox_contents'),
-                                   '공감': soup.find_all(class_='u_cbox_btn_recomm'),
-                                   '비공감': soup.find_all(class_='u_cbox_btn_unrecomm')
-                                   })
-    except ValueError:
-        commentsDf = pd.DataFrame({'comments': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span'),
+    commentsDf = pd.DataFrame({'comments': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span'),
                                '공감': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_recomm'),
                                '비공감': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_unrecomm')
                                })
-    else:pass
     driver.quit()
     commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
     print('naver Number of comment : {}'.format(len(commentsDf)))
     print ('naver End')
-    return commentsDf, commentNum, len(commentsDf)
+    return commentsDf, int(commentNum), len(commentsDf)
 def ExtractElementFromRow(row):
     row['comments'] = row['comments'].text
     row['공감'] = row['공감'].select_one('em').text
@@ -326,8 +319,8 @@ def isElementPresent(driver, locator):
     return True
 # Search for article in news
 def NewsArticleForDaum(cat, url):
-    driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
-    #driver = webdriver.Chrome('../chromedriver')
+    #driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+    driver = webdriver.Chrome('../chromedriver')
     driver.get(url)
     print('daum Start : Search Main Text')
     element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'article_view')))
@@ -339,12 +332,12 @@ def NewsArticleForDaum(cat, url):
     if isElementPresent(driver, 'tag_relate') == False:
         keywords = 'NaN'
     else:
-        element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
+        element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
         keywords = driver.find_elements_by_class_name('tag_relate')
         keywords = list(map(lambda x: x.text, keywords))
         keywords = list(map(lambda x: re.sub('#', '', x), keywords))
     print('daum End : Search Keywords')
-    element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'num_count')))
+    element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'num_count')))
     numComment = int(driver.find_element_by_class_name('num_count').text)
     print('daum information Number of comment : {}'.format(numComment))
     print('daum Start : Click More Button & Crawling comment')
@@ -400,19 +393,18 @@ def NewsArticleForDaum(cat, url):
                         else:
                             more_button_position_count -= 0.5
                     more_button_position = more_button.location['y']
-                    if more_button_position_count == 0:
+                    if more_button_position_count <= 0:
                         loop = False
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         driver.quit()
-        comment_box = soup.find('ul',class_='list_comment')
-        comment_Df = comment_box.select('li')
+        comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
         comment_Df = pd.DataFrame(comment_Df)
         comment_Df.rename({0:'comments'}, axis = 1,inplace = True)
         comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
         print('daum End : Click More Button & Crawling comment')
         print('daum Number of comment : {}'.format(len(comment_Df)))
         print ('daum End')
-    return keywords, article, comment_Df, numComment, len(comment_Df)
+    return keywords, article, comment_Df, int(numComment), len(comment_Df)
 # Run in Daum
 def Main_Daum(runDate, xdaysAgo):
     print('{}'.format('Daum'))
@@ -462,19 +454,19 @@ def Main(site,db_name, runDate, xdaysAgo):
     startTime = datetime.now()
     if site.lower() == 'naver':
         newsDf, commentsDf = Main_Naver(runDate, xdaysAgo)
-        newsCollectionName = 'newsDaum'
+        newsCollectionName = 'newsNaver'
     elif site.lower() == 'daum':
         newsDf, commentsDf = Main_Daum(runDate, xdaysAgo)
-        newsCollectionName = 'newsNaver'
+        newsCollectionName = 'newsDaum'
     else:
         raise NotMatch('Not Match site')
     middleTime = datetime.now()
     runningTime = middleTime = middleTime - startTime
     print ('Start Uploading')
     useCollection_daum_news = dh.Use_Collection(useDb, newsCollectionName)
-    useCollection_daum_news.insert_many(newsDfInDaum.to_dict('records'))
+    useCollection_daum_news.insert_many(newsDf.to_dict('records'))
     useCollection_comment = dh.Use_Collection(useDb, 'comments')
-    useCollection_comment.insert_many(commentsDfInDaum.to_dict('records'))
+    useCollection_comment.insert_many(commentsDf.to_dict('records'))
     print ('End Uploading')
     endTime = datetime.now()
     uploadTime = endTime - middleTime
