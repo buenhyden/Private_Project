@@ -434,12 +434,22 @@ def NewsArticleForDaum(cat, url):
                         more_button_position = more_button.location['y']
                         if more_button_position_count <= 0:
                             loop = False
-        soup = BeautifulSoup(driver.page_source, 'html.parser')
-        driver.quit()
-        comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
-        comment_Df = pd.DataFrame(comment_Df)
-        comment_Df.rename({0:'comments'}, axis = 1,inplace = True)
-        comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
+        try:
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
+            comment_Df = pd.DataFrame(comment_Df)
+            comment_Df.rename({0:'comments'}, axis = 1,inplace = True)
+            comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
+        except AttributeError:
+            driver.implicitly_wait(1)
+            soup = BeautifulSoup(driver.page_source, 'html.parser')
+            comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
+            comment_Df = pd.DataFrame(comment_Df)
+            comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
+            comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
+        else:
+            driver.quit()
+
         print('daum End : Click More Button & Crawling comment')
         print('daum Number of comment : {}'.format(len(comment_Df)))
         print ('daum End')
@@ -522,7 +532,7 @@ os = 'windows'
 if __name__ == "__main__":
     site = sys.argv[1]
     xdaysAgo = sys.argv[2]
-    #site = 'naver'
+    #site = 'daum'
     #xdaysAgo = '5'
     xdaysAgo = int(xdaysAgo)
     runDate = datetime.now().date()
