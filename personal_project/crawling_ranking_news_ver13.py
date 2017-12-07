@@ -295,8 +295,8 @@ def Main_Naver(runDate, xdaysAgo):
             comments, commentNum, num_commentDf = CommentInNaver(category, data2['link'])
             newsList.loc[idx2, 'number_of_comment'] = commentNum
             newsList.loc[idx2, 'real_number_of_comment'] = num_commentDf
-            baseDf = pd.DataFrame({'category': [data2[idx2]['category']] * len(comments),
-                                   'date': [data2[idx2]['date']] * len(comments),
+            baseDf = pd.DataFrame({'category': [data2['category']] * len(comments),
+                                   'date': [data2['date']] * len(comments),
                                    'rank': [data2['rank']] * len(comments)})
             commentsList = pd.concat([baseDf, comments], axis=1)
             outComment = pd.concat([outComment, commentsList], axis=0)
@@ -493,16 +493,17 @@ def Main_Daum(runDate, xdaysAgo):
         newsList['number_of_comment'] = ''
         newsList['real_number_of_comment'] = ''
         for idx2 in newsList.index:
-            newsLink = newsList.loc[idx2]['link']
+            data2 = newsList.loc[idx2]
+            newsLink = data2['link']
             print('{} : {}, {}'.format('Daum', idx2, newsLink))
             keywords, article, comments, numComment, num_comment_Df= NewsArticleForDaum(category, newsLink)
             newsList.loc[idx2, 'keywords'] = keywords
             newsList.loc[idx2, 'mainText'] = article
             newsList.loc[idx2, 'number_of_comment'] = numComment
             newsList.loc[idx2, 'real_number_of_comment'] = num_comment_Df
-            baseDf = pd.DataFrame({ 'category' : [newsList.loc[idx2]['category']] * len(comments),
-                                  'date' : [newsList.loc[idx2]['date']] * len(comments),
-                                  'rank' : [newsList.loc[idx2]['rank']] * len(comments)}
+            baseDf = pd.DataFrame({ 'category' : [data2['category']] * len(comments),
+                                  'date' : [data2['date']] * len(comments),
+                                  'rank' : [data2['rank']] * len(comments)}
                                   )
             commentsList = pd.concat([baseDf, comments], axis = 1)
             outComment = pd.concat([outComment, commentsList], axis = 0)
