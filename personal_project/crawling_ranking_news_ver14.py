@@ -509,7 +509,7 @@ def Main_Daum(runDate, xdaysAgo):
             data2 = newsList.loc[idx2]
             newsLink = data2['link']
             print('{} : {}, {}'.format('Daum', idx2, newsLink))
-            loop = True:
+            loop = True
             while loop:
                 try:
                     keywords, article, comments, numComment, num_comment_Df= NewsArticleForDaum(category, newsLink)
