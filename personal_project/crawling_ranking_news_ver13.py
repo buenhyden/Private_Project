@@ -244,13 +244,26 @@ def CommentInNaver(cat, url):
                 loop = False
     driver.implicitly_wait(3)
     print('naver End Click More Button & Start Crawling comments')
-    soup = BeautifulSoup(driver.page_source, 'html.parser')
-    commentsDf = pd.DataFrame({'comments': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span.u_cbox_contents'),
+    try:
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        commentsDf = pd.DataFrame({'comments': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span.u_cbox_contents'),
                                '공감': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_recomm'),
                                '비공감': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_unrecomm')
                                })
+        commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
+    except:
+        driver.implicitly_wait(1.5)
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        commentsDf = pd.DataFrame({'comments': soup.select(
+            '#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span.u_cbox_contents'),
+                                   '공감': soup.select(
+                                       '#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_recomm'),
+                                   '비공감': soup.select(
+                                       '#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_unrecomm')
+                                   })
+        commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
+    else:pass
     driver.quit()
-    commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
     print('naver Number of comment : {}'.format(len(commentsDf)))
     print ('naver End')
     return commentsDf, int(commentNum), len(commentsDf)
