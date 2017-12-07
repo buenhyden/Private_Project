@@ -331,9 +331,12 @@ def NewsDataForDaum(date, cat, source):
     return {'category':cat, 'date':date, 'rank':rank, 'press':press, 'title':title, 'link':link}
 # Search for comment in news
 def CommentsInDaum(df):
-    recomm =  df['comments'].find('span', class_='comment_recomm')
-    recomm = list(map(lambda x: x.text, recomm.find_all('button')))
-    recomm = list(map(lambda x: re.search('[\d]+', x).group(), recomm))
+    try:
+        recomm =  df['comments'].find('span', class_='comment_recomm')
+        recomm = list(map(lambda x: x.text, recomm.find_all('button')))
+        recomm = list(map(lambda x: re.search('[\d]+', x).group(), recomm))
+    except AttributeError:
+        recomm = (0,0)
     df[r'공감'] = recomm[0]
     df[r'비공감'] = recomm[1]
     if df['comments'].find('p').text == '':
@@ -434,22 +437,12 @@ def NewsArticleForDaum(cat, url):
                         more_button_position = more_button.location['y']
                         if more_button_position_count <= 0:
                             loop = False
-        try:
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
-            comment_Df = pd.DataFrame(comment_Df)
-            comment_Df.rename({0:'comments'}, axis = 1,inplace = True)
-            comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
-        except AttributeError:
-            driver.implicitly_wait(1)
-            soup = BeautifulSoup(driver.page_source, 'html.parser')
-            comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
-            comment_Df = pd.DataFrame(comment_Df)
-            comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
-            comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
-        else:
-            driver.quit()
-
+        soup = BeautifulSoup(driver.page_source, 'html.parser')
+        comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
+        comment_Df = pd.DataFrame(comment_Df)
+        comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
+        comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
+        driver.quit()
         print('daum End : Click More Button & Crawling comment')
         print('daum Number of comment : {}'.format(len(comment_Df)))
         print ('daum End')
