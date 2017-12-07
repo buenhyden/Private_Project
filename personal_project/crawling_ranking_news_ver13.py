@@ -120,6 +120,13 @@ def NewsDataInNaver(date, cat, mainpage, source):
     return {'date': date, 'rank': rank, 'title': title, 'link': link}
 # Filtering News Article
 def FilterMainText(contents):
+    mainText = list(filter(lambda x: x.PREFIX !='<!--' and x.PREFIX !=None, contents))
+    mainText = list(map(lambda x: x.strip(), mainText))
+    mainText = ''.join(mainText)
+    mainText = mainText.replace(u'\xa0', u'')
+    return mainText
+'''
+def FilterMainText(contents):
     mainText = contents.text
     #body = re.sub('(<span.*?>.*?</span>)', '', str(contents),1)
     #mainText = re.sub('<.+?>', '', body, 1)
@@ -131,6 +138,7 @@ def FilterMainText(contents):
     #mainText = list(map(lambda x: x.strip(), mainText))
     #mainText = ''.join(mainText)
     return mainText
+'''
 # Search for News Article & Press
 def ArticleInNaver(cat, url):
     articleIdList = ['articeBody', 'newsEndContents', 'articleBodyContents']
@@ -442,19 +450,19 @@ def NewsArticleForDaum(cat, url):
             comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
         except AttributeError:
             driver.implicitly_wait(3)
-           try:
-               soup = BeautifulSoup(driver.page_source, 'html.parser')
-               comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
-               comment_Df = pd.DataFrame(comment_Df)
-               comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
-               comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
-           except AttributeError:
-               driver.implicitly_wait(2)
-               soup = BeautifulSoup(driver.page_source, 'html.parser')
-               comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
-               comment_Df = pd.DataFrame(comment_Df)
-               comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
-               comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
+            try:
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+                comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
+                comment_Df = pd.DataFrame(comment_Df)
+                comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
+                comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
+            except AttributeError:
+                driver.implicitly_wait(2)
+                soup = BeautifulSoup(driver.page_source, 'html.parser')
+                comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
+                comment_Df = pd.DataFrame(comment_Df)
+                comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
+                comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
         else:
             pass
         driver.quit()
