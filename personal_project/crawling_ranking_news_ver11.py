@@ -518,12 +518,12 @@ def Main(site,db_name, runDate, xdaysAgo):
     slack.chat.post_message('# general', time_info)
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
-os = 'windows'
+os = 'mac'
 if __name__ == "__main__":
-    site = sys.argv[1]
-    xdaysAgo = sys.argv[2]
-    #site = 'naver'
-    #xdaysAgo = '5'
+    #site = sys.argv[1]
+    #xdaysAgo = sys.argv[2]
+    site = 'daum'
+    xdaysAgo = '5'
     xdaysAgo = int(xdaysAgo)
     runDate = datetime.now().date()
     Main(site, 'hy_db', runDate, xdaysAgo)

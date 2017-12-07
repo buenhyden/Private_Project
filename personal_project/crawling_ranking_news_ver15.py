@@ -19,20 +19,20 @@ import Database_Handler as dh
 from multiprocessing import Pool
 from functools import partial
 # [Default]
-
 def OS_Driver(os,browser):
     if os.lower() == 'windows':
         if browser.lower() == 'phantom':
-            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-window/bin/phantomjs.ext'
+            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-window/bin/phantomjs.exe')
         else:
             driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     elif os.lower() == 'mac':
-        if browser.lowser() == 'phantom':
+        if browser.lower() == 'phantom':
             driver = webdriver.PhantomJS(
                 '/Users/hyunyoun/Documents/GitHub/Private_Project/phantomjs-2.1.1/bin/phantomjs')
         else:
-            driver = webdriver.Chrome('../chromedriver')
+            driver = webdriver.Chrome('/Users/hyunyoun/Documents/GitHub/Private_Project/chromedriver')
     return driver
+# Use naver api
 def OpenAPI(apiFile):
     apiKey = pickle.load(open(apiFile, 'rb'))
     return apiKey
@@ -95,8 +95,7 @@ def CategoryWebPathForNaver(date, mainpage, url):
 # Search for news list in category
 def NewsListInCategoryForNaver(date, mainpage, cat, url):
     if cat == r'연예':
-        global os
-        global browser
+        global os, browser
         driver = OS_Driver(os, browser)
         driver.get(url)
         newsSelector = '#ranking_list > li > div.tit_area'
@@ -174,8 +173,7 @@ def ArticleInNaver(cat, url):
     return mainText, press
 # Search for Comment
 def CommentInNaver(cat, url):
-    global os
-    global browser
+    global os, browser
     driver = OS_Driver(os, browser)
     if cat == r'연예':
         commentByClass = 'reply_count';
@@ -350,7 +348,7 @@ def SearchTargetForDaum(target, mainPage):
 # Search for news list in category
 def NewsListInCategoryForDaum(date, cat, url):
     soup = WebPageUsingBS(url, 'html')
-    newsList = soup.select('#mArticle > div.rank_news > ul.list_news2 > li > div.cmt_info')
+    newsList = soup.select('#mArticle > div.rank_news > ul.list_news2 > li')
     dp = pd.DataFrame(list(map(lambda x: NewsDataForDaum(date, cat, x), newsList)))
     return dp
 # Search for news information
@@ -382,8 +380,7 @@ def isElementPresent(driver, locator):
     return True
 # Search for article in news
 def NewsArticleForDaum(cat, url):
-    global os
-    global browser
+    global os, browser
     driver = OS_Driver(os, browser)
     driver.get(url)
     print('daum Start : Search Main Text')
@@ -468,7 +465,7 @@ def NewsArticleForDaum(cat, url):
                             loop = False
         driver.implicitly_wait(3)
         soup = BeautifulSoup(driver.page_source, 'html.parser')
-        comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
+        comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li > div.cmt_info')
         comment_Df = pd.DataFrame(comment_Df)
         comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
         comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
@@ -493,7 +490,9 @@ def Main_Daum(runDate, xdaysAgo):
         category = data['category']
         print('{} : {}'.format('Daum', category))
         link = data['link']
+        print (link)
         newsList = NewsListInCategoryForDaum(targetDate, category, link)
+        print (newsList)
         newsList['mainText'] = ''
         newsList['keywords'] = ''
         newsList['number_of_comment'] = ''
@@ -552,13 +551,13 @@ def Main(site,db_name, runDate, xdaysAgo):
     slack.chat.post_message('# general', time_info)
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
-os = 'windows'
-browser = ''
+os = 'mac'
+browser = 'chrome'
 if __name__ == "__main__":
-    site = sys.argv[1]
-    xdaysAgo = sys.argv[2]
-    #site = 'daum'
-    #xdaysAgo = '5'
+    #site = sys.argv[1]
+    #xdaysAgo = sys.argv[2]
+    site = 'daum'
+    xdaysAgo = '5'
     xdaysAgo = int(xdaysAgo)
     runDate = datetime.now().date()
     Main(site, 'hy_db', runDate, xdaysAgo)

@@ -23,7 +23,7 @@ from functools import partial
 def OS_Driver(os,browser):
     if os.lower() == 'windows':
         if browser.lower() == 'phantom':
-            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-window/bin/phantomjs.ext'
+            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-window/bin/phantomjs.exe')
         else:
             driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     elif os.lower() == 'mac':
@@ -555,10 +555,10 @@ def Main(site,db_name, runDate, xdaysAgo):
 os = 'windows'
 browser = ''
 if __name__ == "__main__":
-    site = sys.argv[1]
-    xdaysAgo = sys.argv[2]
-    #site = 'daum'
-    #xdaysAgo = '5'
+    #site = sys.argv[1]
+    #xdaysAgo = sys.argv[2]
+    site = 'daum'
+    xdaysAgo = '5'
     xdaysAgo = int(xdaysAgo)
     runDate = datetime.now().date()
     Main(site, 'hy_db', runDate, xdaysAgo)
