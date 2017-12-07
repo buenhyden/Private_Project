@@ -288,18 +288,26 @@ def Main_Naver(runDate, xdaysAgo):
         newsList['real_number_of_comment'] = ''
         for idx2 in newsList.index:
             data2 = newsList.loc[idx2]
-            newsInfo = ArticleInNaver(category, data2['link'])
-            newsList.loc[idx2, 'press'] = newsInfo[1]
-            newsList.loc[idx2, 'mainText'] = newsInfo[0]
             print('{} : {}, {}'.format('Naver', idx2, data2['link']))
-            comments, commentNum, num_commentDf = CommentInNaver(category, data2['link'])
-            newsList.loc[idx2, 'number_of_comment'] = commentNum
-            newsList.loc[idx2, 'real_number_of_comment'] = num_commentDf
-            baseDf = pd.DataFrame({'category': [data2[idx2]['category']] * len(comments),
+            loop = True:
+            while loop:
+                try:
+                    newsInfo = ArticleInNaver(category, data2['link'])
+                    newsList.loc[idx2, 'press'] = newsInfo[1]
+                    newsList.loc[idx2, 'mainText'] = newsInfo[0]
+
+                    comments, commentNum, num_commentDf = CommentInNaver(category, data2['link'])
+                    newsList.loc[idx2, 'number_of_comment'] = commentNum
+                    newsList.loc[idx2, 'real_number_of_comment'] = num_commentDf
+                    baseDf = pd.DataFrame({'category': [data2[idx2]['category']] * len(comments),
                                    'date': [data2[idx2]['date']] * len(comments),
                                    'rank': [data2['rank']] * len(comments)})
-            commentsList = pd.concat([baseDf, comments], axis=1)
-            outComment = pd.concat([outComment, commentsList], axis=0)
+                    commentsList = pd.concat([baseDf, comments], axis=1)
+                    outComment = pd.concat([outComment, commentsList], axis=0)
+                except:
+                    loop = False
+                else:
+                    loop = True
         outNews = pd.concat([outNews, newsList], axis=0)
     outNews['site'] = 'Naver'
     outComment['site'] = 'Naver'
@@ -445,14 +453,16 @@ def NewsArticleForDaum(cat, url):
                             loop = False
         try:
             soup = BeautifulSoup(driver.page_source, 'html.parser')
+            driver.quit()
             comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
             comment_Df = pd.DataFrame(comment_Df)
             comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
             comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
         except AttributeError:
-            driver.implicitly_wait(3)
+            driver.implicitly_wait(2)
             try:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
+                driver.quit()
                 comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
                 comment_Df = pd.DataFrame(comment_Df)
                 comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
@@ -460,10 +470,13 @@ def NewsArticleForDaum(cat, url):
             except AttributeError:
                 driver.implicitly_wait(2)
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
+                driver.quit()
                 comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
                 comment_Df = pd.DataFrame(comment_Df)
                 comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
                 comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
+            else:
+                pass
         else:
             pass
         driver.quit()
@@ -493,19 +506,27 @@ def Main_Daum(runDate, xdaysAgo):
         newsList['number_of_comment'] = ''
         newsList['real_number_of_comment'] = ''
         for idx2 in newsList.index:
-            newsLink = newsList.loc[idx2]['link']
+            data2 = newsList.loc[idx2]
+            newsLink = data2['link']
             print('{} : {}, {}'.format('Daum', idx2, newsLink))
-            keywords, article, comments, numComment, num_comment_Df= NewsArticleForDaum(category, newsLink)
-            newsList.loc[idx2, 'keywords'] = keywords
-            newsList.loc[idx2, 'mainText'] = article
-            newsList.loc[idx2, 'number_of_comment'] = numComment
-            newsList.loc[idx2, 'real_number_of_comment'] = num_comment_Df
-            baseDf = pd.DataFrame({ 'category' : [newsList.loc[idx2]['category']] * len(comments),
-                                  'date' : [newsList.loc[idx2]['date']] * len(comments),
-                                  'rank' : [newsList.loc[idx2]['rank']] * len(comments)}
+            loop = True:
+            while loop:
+                try:
+                    keywords, article, comments, numComment, num_comment_Df= NewsArticleForDaum(category, newsLink)
+                    newsList.loc[idx2, 'keywords'] = keywords
+                    newsList.loc[idx2, 'mainText'] = article
+                    newsList.loc[idx2, 'number_of_comment'] = numComment
+                    newsList.loc[idx2, 'real_number_of_comment'] = num_comment_Df
+                    baseDf = pd.DataFrame({ 'category' : [data2['category']] * len(comments),
+                                  'date' : [data2['date']] * len(comments),
+                                  'rank' : [data2['rank']] * len(comments)}
                                   )
-            commentsList = pd.concat([baseDf, comments], axis = 1)
-            outComment = pd.concat([outComment, commentsList], axis = 0)
+                    commentsList = pd.concat([baseDf, comments], axis = 1)
+                    outComment = pd.concat([outComment, commentsList], axis = 0)
+                except:
+                    loop = True
+                else:
+                    loop = False
         outNews = pd.concat([outNews, newsList], axis = 0)
     outNews['site'] = 'daum'
     outComment['site'] = 'daum'
