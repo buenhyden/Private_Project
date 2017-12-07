@@ -242,6 +242,7 @@ def CommentInNaver(cat, url):
             webdriver.ActionChains(driver).move_to_element(moreComment).click(moreComment).perform()
             if moreComment.get_attribute('style') != '':
                 loop = False
+    driver.implicitly_wait(3)
     print('naver End Click More Button & Start Crawling comments')
     soup = BeautifulSoup(driver.page_source, 'html.parser')
     commentsDf = pd.DataFrame({'comments': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span.u_cbox_contents'),
@@ -443,6 +444,7 @@ def NewsArticleForDaum(cat, url):
                         more_button_position = more_button.location['y']
                         if more_button_position_count <= 0:
                             loop = False
+        driver.implicitly_wait(3)
         try:
             soup = BeautifulSoup(driver.page_source, 'html.parser')
             comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
@@ -450,7 +452,7 @@ def NewsArticleForDaum(cat, url):
             comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
             comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
         except AttributeError:
-            driver.implicitly_wait(3)
+            driver.implicitly_wait(1.5)
             try:
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
@@ -458,7 +460,7 @@ def NewsArticleForDaum(cat, url):
                 comment_Df.rename({0: 'comments'}, axis=1, inplace=True)
                 comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis=1)
             except AttributeError:
-                driver.implicitly_wait(2)
+                driver.implicitly_wait(1)
                 soup = BeautifulSoup(driver.page_source, 'html.parser')
                 comment_Df = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li')
                 comment_Df = pd.DataFrame(comment_Df)
