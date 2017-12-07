@@ -334,9 +334,16 @@ def CommentsInDaum(df):
     try:
         recomm =  df['comments'].find('span', class_='comment_recomm')
         recomm = list(map(lambda x: x.text, recomm.find_all('button')))
-        recomm = list(map(lambda x: re.search('[\d]+', x).group(), recomm))
     except AttributeError:
-        recomm = (0,0)
+        try:
+            recomm = df['comments'].find('span', class_='comment_recomm')
+            recomm = list(map(lambda x: x.text, recomm.find_all('button')))
+        except AttributeError:
+            recomm = (0,0)
+        else:
+            recomm = list(map(lambda x: re.search('[\d]+', x).group(), recomm))
+    else:
+        recomm = list(map(lambda x: re.search('[\d]+', x).group(), recomm))
     df[r'공감'] = recomm[0]
     df[r'비공감'] = recomm[1]
     if df['comments'].find('p').text == '':
