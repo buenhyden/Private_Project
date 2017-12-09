@@ -427,20 +427,20 @@ def NewsArticleForDaum(cat, url):
                         pass
                 else:
                     try:
-                        more_button.is_displayed()
+                        more_button.location
+                        if more_button_position == more_button.location:
+                            if len(commentElements) / numComment >= 0.75:
+                                more_button_position_count -= 1
+                            else:
+                                more_button_position_count -= 0.25
+                        more_button_position = more_button.location
+                        if more_button_position_count <= 0:
+                            loop = False
                     except StaleElementReferenceException:
                         loop = False
                     except NoSuchElementException:
                         loop = False
-                    else:
-                        if more_button_position == more_button.location['y']:
-                            if len(commentElements) / numComment >= 0.5:
-                                more_button_position_count -= 1
-                            else:
-                                more_button_position_count -= 0.25
-                        more_button_position = more_button.location['y']
-                        if more_button_position_count <= 0:
-                            loop = False
+                    else:pass
         driver.implicitly_wait(3)
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         comments = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li > div.cmt_info')
