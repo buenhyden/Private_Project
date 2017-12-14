@@ -1,6 +1,5 @@
 import sys
-
-sys.path.append('C:/Users/pc/Documents/GitHub/Private_Project/personal_project')
+sys.path.append('/home/ubuntu/personal_project/')
 from collections import defaultdict
 from datetime import datetime, timedelta
 import time
@@ -15,33 +14,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.by import By
 from selenium.webdriver import ActionChains
 import pickle
-import chat_bot as cb
 import Database_Handler as dh
 from multiprocessing import Pool
 from functools import partial
-
-
-# [Default]
-def OS_Driver(os, browser):
-    if os.lower() == 'windows':
-        if browser.lower() == 'phantom':
-            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-window/bin/phantomjs.exe')
-        else:
-            driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
-    elif os.lower() == 'mac':
-        if browser.lower() == 'phantom':
-            driver = webdriver.PhantomJS(
-                '/Users/hyunyoun/Documents/GitHub/Private_Project/phantomjs-2.1.1/bin/phantomjs')
-        else:
-            driver = webdriver.Chrome('/Users/hyunyoun/Documents/GitHub/Private_Project/chromedriver')
-    return driver
-
-
-# Use naver api
-def OpenAPI(apiFile):
-    apiKey = pickle.load(open(apiFile, 'rb'))
-    return apiKey
-
+import chat_bot as cb
 
 ## Define Error
 class NotMatch(Exception):
@@ -174,11 +150,12 @@ def Main(site,db_name):
     print ('End Uploading')
     endTime = datetime.now()
     uploadTime = endTime - middleTime
-    outcome_info = 'News Topics {}, run date : {}'.format(site, startTime.strftime('%Y%m%d'))
-    slack.chat.post_message('# general', outcome_info)
-    slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
+    outcome_info = 'News Topics {}, run date : {}, Number : {} Complete Upload in AWS mongodb'.format(site, startTime.strftime('%Y%m%d'), len(topicDf)))
+    slack.chat.post_message('# notification', outcome_info)
     mongodb.close()
 
 if __name__ == '__main__':
-    #Main('naver', 'hy_db')
-    Main('daum', 'hy_db')
+    sites = ['daum','naver']
+    p = Pool(2)
+    x = partial(Main, db_name = 'hy_db')
+    p.map(x, sites)
