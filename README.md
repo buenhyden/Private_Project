@@ -2,26 +2,50 @@
 ---------------------------  
 ## Description  
 ### 1. 데이터 수집.  
-> package : selenium, requests, BeautifulSoup.  
->  1. 일별로 카테고리별 랭킹에 따라 뉴스를 크롤링.  
->> * 네이버, 다음.     
+> * package : selenium, requests, BeautifulSoup.  
+> 
+> 1. 일별로 카테고리별 랭킹에 따라 뉴스를 크롤링.  
+>> * 네이버, 다음.  
 >> * 뉴스는 본문,  신문사, 랭킹순위, 카테고리, 날짜, 사이트, 댓글수, 크롤링한 댓글수, (다음의 경우, 키워드 정보까지).  
+>>
 >> 다음.  
-| category | date | link | press | rank | title | mainText | keywords | number of comments |  real comment | site |  
-|:------------|:------:|:-----:|:-------:|:------:|:----:|:-------------:|:-----------:|:----------------------------:|:--------------------:|------:|
-| category | date|link | press | rank | title | mainText | keyword | number of comments |  real comment | site |
->  2. 해당 뉴스에 대한 전체 댓글 내용과 각 댓글의 공감/비공감 수. 
->  3.  2시간마다 해당 시간대의 newstopic에 대한 순위를 카테고리별로 수집함. 
->> * 이모티콘으로만 구성된 댓글은 배제함.
+>> 
+>> | category | date | link | press | rank | title | mainText | keywords | number of comments |  real comment | site |  
+>> |:------------|:------:|:-----:|:-------:|:------:|:----:|:-------------:|:-----------:|:----------------------------:|:--------------------:|------:|
+>> | category | date|link | press | rank | title | mainText | keyword | number of comments |  real comment | site |  
+>> 
+>> 네이버.    
+>> 
+>> | category | date | link | press | rank | title | mainText | number of comments |  real comment | site |  
+>> |:------------|:------:|:-----:|:-------:|:------:|:----:|:-------------:|:----------------------------:|:--------------------:|------:|
+>> | category | date|link | press | rank | title | mainText | keyword | number of comments | site |  
+>
+> 2. 해당 뉴스에 대한 전체 댓글 내용과 각 댓글의 공감/비공감 수.  
+>>   
+>> 댓글.  
+>> 
+>> | category | date | link | comment | 공감 | 비공감 | site |  
+>> |:------------|:------:|:-----:|:------------:|:-----:|:---------:|-----:|  
+>> | category | date | link | comment | 공감 | 비공감 | site |  
+>>  
+> 3.  2시간마다 해당 시간대의 newstopic에 대한 순위를 카테고리별로 수집함.  
+> * 이모티콘으로만 구성된 댓글은 배제함.
+>>  
+>> 뉴스토픽.  
+>> 
+>> | date | time | site | category | rank | topic |  
+>> |:-------|:------:|:-----:|:-----------:|:------:|--------:| 
+>> | date | time | site | category | rank | topic |    
+>>   
 
-### 2. 데이터베이스 구축 (2017 12월 14일 19시 40분 기준). 
+### 2. 데이터베이스 구축 (2017 12월 16일 15시 20분 기준).  
 > 크롤링을 통해 데이터를 저장할 데이터 베이스를 구축.  
-> mongoDB. 
-> * DB 구축.   
->> * newsDaum : 1872. 
->> * newsNaver : 3121. 
->> * comments : 2872833. 
->> * newsTopic : 2456. 
+> mongoDB.  
+> * DB 구축.  
+>> * news - Daum : 2172.  
+>> * news - Naver : 3601.  
+>> * comments : 3468082.  
+>> * newsTopic : 3600.  
 
 ### 3. 웹 구축. 
 > Flask를 이용하여 Amazone Web Service(AWS)에 웹 구축 (예정). 
