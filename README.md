@@ -2,7 +2,7 @@
 ---------------------------  
 ## Description  
 ### 1. 데이터 수집.  
-> * package : selenium, requests, BeautifulSoup.  
+> * package : selenium, requests, BeautifulSoup, etc.  
 > 
 > 1. 일별로 카테고리별 랭킹에 따라 뉴스를 크롤링.  
 >> * 네이버, 다음.  
@@ -11,7 +11,7 @@
 >> 다음.  
 >> 
 >> | category | date | link | press | rank | title | mainText | keywords | number of comments |  real comment | site |  
->> |:------------|:------:|:-----:|:-------:|:------:|:----:|:-------------:|:-----------:|:----------------------------:|:--------------------:|------:|
+>> |:------------|:------:|:-----:|:-------:|:------:|:----:|:-------------:|:-----------:|:-----------------------:|:---------------:|------:|
 >> | category | date|link | press | rank | title | mainText | keyword | number of comments |  real comment | site |  
 >> 
 >> 네이버.    
