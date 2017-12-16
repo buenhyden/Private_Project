@@ -74,3 +74,8 @@
 > * 시각화 작업  
 >> * 키워드 사이의 연관성을 보여주는 그래프를 보여줄 수 있다.  
 ---------------------------  
+### * 참고
+* [konlpy](konlpy.org)
+* [customized konlpy](https://github.com/lovit/customized_konlpy)
+* [datascienceschool](https://datascienceschool.net/)
+---------------------------  
