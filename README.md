@@ -18,7 +18,7 @@
 >> 
 >> | category | date | link | press | rank | title | mainText | number of comments |  real comment | site |  
 >> |:------------|:------:|:-----:|:-------:|:------:|:----:|:-------------:|:----------------------------:|:--------------------:|------:|
->> | category | date|link | press | rank | title | mainText | keyword | number of comments | site |  
+>> | category | date | link | press | rank | title | mainText | number of comments |  real comment | site |  
 >
 > 2. 해당 뉴스에 대한 전체 댓글 내용과 각 댓글의 공감/비공감 수.  
 >>   
