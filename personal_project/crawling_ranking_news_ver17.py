@@ -283,6 +283,7 @@ def Main_Naver(runDate, xdaysAgo):
         newsList['mainText'] = ''
         newsList['number_of_comment'] = ''
         newsList['real_number_of_comment'] = ''
+        newsList['keywords'] = ''
         for idx2 in newsList.index:
             data2 = newsList.loc[idx2]
             print('{} : {}, {}'.format('Naver', idx2, data2['link']))
@@ -291,6 +292,7 @@ def Main_Naver(runDate, xdaysAgo):
             newsList.loc[idx2, 'press'] = press
             newsList.loc[idx2, 'number_of_comment'] = commentNum
             newsList.loc[idx2, 'real_number_of_comment'] = num_commentDf
+            newsList.loc[idx2, 'keywords'] = SearchKeywordsFromDaumForNaver(newsList['title'], press):
             baseDf = pd.DataFrame({'category': [data2['category']] * len(comments),
                                    'date': [data2['date']] * len(comments),
                                    'rank': [data2['rank']] * len(comments)})
@@ -302,6 +304,27 @@ def Main_Naver(runDate, xdaysAgo):
     outNews.reset_index(drop = True, inplace = True)
     outComment.reset_index(drop = True, inplace = True)
     return outNews, outComment
+# Add keywords from daum in naver
+def SearchKeywordsFromDaumForNaver(title, press):
+    driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+    driver.get('http:www.daum.net')
+    tf_keyword = title + '&' + press
+    element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'tf_keyword')))
+    element.send_keys(tf_keyword)
+    button = find_element_by_css_selector('#daumSearch > fieldset > div > div > button')
+    crnv.webdriver.ActionChains(driver).move_to_element(button).click(button).perform()
+    webpage = y = driver.find_element_by_css_selector('#clusterResultUL > li > div.wrap_cont > div > span > a').get_attribute('href')
+    driver.get(webpage)
+    element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'copyright_view')))
+    if isElementPresent(driver, 'tag_relate') == False:
+        keywords = 'NaN'
+    else:
+        element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
+        keywords = driver.find_elements_by_class_name('tag_relate')
+        keywords = list(map(lambda x: x.text, keywords))
+        keywords = list(map(lambda x: re.sub('#', '', x), keywords))
+    driver.quit()
+    return keywords
 # --------------------------------------------------------------------
 # Crawling for Daum
 # --------------------------------------------------------------------
