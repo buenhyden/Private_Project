@@ -1,5 +1,5 @@
 import sys
-sys.path.append('C:/Users/pc/Documents/GitHub/Private_Project/personal_project')
+sys.path.append('../personal_project/')
 from collections import defaultdict
 from datetime import datetime, timedelta
 import time
@@ -23,7 +23,8 @@ def isElementPresent(driver, locator):
         return False
     return True
 def SearchKeywordsFromDaumForNaver(title, press):
-    driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+    driver = webdriver.Chrome('../chromedriver')
+    #driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     driver.get('http:www.daum.net')
     tf_keyword = title + '&' + press
     element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'tf_keyword')))
@@ -59,9 +60,10 @@ if __name__=='__main__':
     useCollection = dh.Use_Collection(useDb, collection)
     dataList = useCollection.find({'site': site})
     for data in dataList:
-        print (data.keys())
-        print (data)
-        if not 'keywords' in data.keys() :
+        if not 'keywords' in data.keys():
             keywords = SearchKeywordsFromDaumForNaver(data['title'], data['press'])
-            useCollection.update({"_id": data['_id']},
-            {'$set': {"keywords": keywords}})
+            useCollection.update({"_id": data['_id']},{'$set': {"keywords": keywords}})
+        #
+        #elif 'keywords' in data.keys() and data['keywords'] =='NaN':
+        #    keywords = SearchKeywordsFromDaumForNaver(data['title'], data['press'])
+        #    useCollection.update({"_id": data['_id']},{'$set': {"keywords": keywords}})
