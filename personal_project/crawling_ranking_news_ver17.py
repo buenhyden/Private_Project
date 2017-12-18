@@ -173,11 +173,11 @@ def Article_Comment_InNaver(cat, url):
     except:
         commentClassList.remove(commentByClass)
         try:
-            element = WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.CLASS_NAME, commentClassList[0])))
+            element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentClassList[0])))
             moreCommentPage = driver.find_element_by_class_name(commentClassList[0])
 
         except:
-            element = WebDriverWait(driver, 1.5).until(
+            element = WebDriverWait(driver, 3).until(
                 EC.presence_of_element_located((By.CLASS_NAME, commentClassList[1])))
             moreCommentPage = driver.find_element_by_class_name(commentClassList[1])
             webdriver.ActionChains(driver).move_to_element(moreCommentPage).click(moreCommentPage).perform()
@@ -190,7 +190,7 @@ def Article_Comment_InNaver(cat, url):
         element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentNumByClass)))
         commentNum = driver.find_element_by_class_name(commentNumByClass).text
     except:
-        element = WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.CLASS_NAME, commentNumByClass)))
+        element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentNumByClass)))
         commentNum = driver.find_element_by_class_name(commentNumByClass).text
         commentNum = ''.join(commentNum.split(','))
     else:
@@ -205,7 +205,7 @@ def Article_Comment_InNaver(cat, url):
             moreComment = driver.find_element_by_class_name(commentMore)
         except TimeoutException:
             try:
-                element = WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.CLASS_NAME, commentMore)))
+                element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentMore)))
                 moreComment = driver.find_element_by_class_name(commentMore)
                 webdriver.ActionChains(driver).move_to_element(moreComment).click(moreComment).perform()
             except NoSuchElementException:
@@ -214,7 +214,7 @@ def Article_Comment_InNaver(cat, url):
                 loop = False
         except StaleElementReferenceException:
             try:
-                element = WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.CLASS_NAME, commentMore)))
+                element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, commentMore)))
                 moreComment = driver.find_element_by_class_name(commentMore)
                 webdriver.ActionChains(driver).move_to_element(moreComment).click(moreComment).perform()
             except StaleElementReferenceException:
@@ -234,7 +234,7 @@ def Article_Comment_InNaver(cat, url):
                                '비공감': soup.select('#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_unrecomm')
                                })
     except:
-        driver.implicitly_wait(1.5)
+        driver.implicitly_wait(3)
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         commentsDf = pd.DataFrame({'comments': soup.select(
             '#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_text_wrap > span.u_cbox_contents'),
@@ -243,9 +243,23 @@ def Article_Comment_InNaver(cat, url):
                                    '비공감': soup.select(
                                        '#cbox_module > div > div.u_cbox_content_wrap > ul > li > div.u_cbox_comment_box > div > div.u_cbox_tool > div > a.u_cbox_btn_unrecomm')
                                    })
-        commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
+        if len(commentsDf) == 1:
+            for idx in commentsDf.index:
+                info = commentsDf.loc[idx]
+                info['comments'] = re.sub('[\f\n\r\t]', ' ', info['comments'].text)
+                info['공감'] = info['공감'].select_one('em').text
+                info['비공감'] = info['비공감'].select_one('em').text
+        else:
+            commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
     else:
-        commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
+        if len(commentsDf) == 1:
+            for idx in commentsDf.index:
+                info = commentsDf.loc[idx]
+                info['comments'] = re.sub('[\f\n\r\t]', ' ', info['comments'].text)
+                info['공감'] = info['공감'].select_one('em').text
+                info['비공감'] = info['비공감'].select_one('em').text
+        else:
+            commentsDf = commentsDf.apply(lambda x: ExtractElementFromRow(x), axis=1)
     driver.quit()
     print('naver Number of comment : {}'.format(len(commentsDf)))
     print ('naver End')
@@ -286,13 +300,13 @@ def Main_Naver(runDate, xdaysAgo):
         newsList['keywords'] = ''
         for idx2 in newsList.index:
             data2 = newsList.loc[idx2]
+            newsList.at[idx2, 'keywords'] = SearchKeywordsFromDaumForNaver(data2['title'])
             print('{} : {}, {}'.format('Naver', idx2, data2['link']))
             mainText, press, comments, commentNum, num_commentDf = Article_Comment_InNaver(category, data2['link'])
             newsList.loc[idx2, 'mainText'] = mainText
             newsList.loc[idx2, 'press'] = press
             newsList.loc[idx2, 'number_of_comment'] = commentNum
             newsList.loc[idx2, 'real_number_of_comment'] = num_commentDf
-            newsList.loc[idx2, 'keywords'] = SearchKeywordsFromDaumForNaver(newsList['title'], press):
             baseDf = pd.DataFrame({'category': [data2['category']] * len(comments),
                                    'date': [data2['date']] * len(comments),
                                    'rank': [data2['rank']] * len(comments)})
@@ -305,25 +319,28 @@ def Main_Naver(runDate, xdaysAgo):
     outComment.reset_index(drop = True, inplace = True)
     return outNews, outComment
 # Add keywords from daum in naver
-def SearchKeywordsFromDaumForNaver(title, press):
-    driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
-    driver.get('http:www.daum.net')
-    tf_keyword = title + '&' + press
-    element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'tf_keyword')))
-    element.send_keys(tf_keyword)
-    button = find_element_by_css_selector('#daumSearch > fieldset > div > div > button')
-    crnv.webdriver.ActionChains(driver).move_to_element(button).click(button).perform()
-    webpage = y = driver.find_element_by_css_selector('#clusterResultUL > li > div.wrap_cont > div > span > a').get_attribute('href')
-    driver.get(webpage)
-    element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'copyright_view')))
-    if isElementPresent(driver, 'tag_relate') == False:
+def SearchKeywordsFromDaumForNaver(title):
+    daumSearch = 'https://search.daum.net/search?w=tot&DA=YZR&t__nil_searchbox=btn&sug=&sugo=&q='
+    res = requests.get(daumSearch + title)
+    soup = BeautifulSoup(res.content, 'html.parser')
+    try:
+        link = soup.select_one('#clusterResultUL > li > div.wrap_cont > div > span > a')
+        global os, browser
+        driver = OS_Driver(os, browser)
+        driver.get(link.attrs['href'])
+        element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
+    except:
+        driver.quit()
         keywords = 'NaN'
     else:
-        element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
-        keywords = driver.find_elements_by_class_name('tag_relate')
-        keywords = list(map(lambda x: x.text, keywords))
-        keywords = list(map(lambda x: re.sub('#', '', x), keywords))
-    driver.quit()
+        if isElementPresent(driver, 'tag_relate') == False:
+            keywords = 'NaN'
+        else:
+            element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
+            keywords = driver.find_elements_by_class_name('tag_relate')
+            keywords = list(map(lambda x: x.text, keywords))
+            keywords = list(map(lambda x: re.sub('#', '', x), keywords))
+        driver.quit()
     return keywords
 # --------------------------------------------------------------------
 # Crawling for Daum
@@ -395,16 +412,16 @@ def NewsArticleForDaum(cat, url):
         keywords = list(map(lambda x: re.sub('#', '', x), keywords))
     print('daum End : Search Keywords')
     try:
-        element = WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.CLASS_NAME, 'num_count')))
+        element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'num_count')))
         numComment = int(driver.find_element_by_class_name('num_count').text)
     except TimeoutException:
-        element = WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.CLASS_NAME, 'num_count')))
+        element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'num_count')))
         numComment = int(driver.find_element_by_class_name('num_count').text)
     else:pass
     print('daum information Number of comment : {}'.format(numComment))
     print('daum Start : Click More Button & Crawling comment')
     try:
-        element = WebDriverWait(driver, 1.5).until(EC.presence_of_element_located((By.ID, 'alex-area')))
+        element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.ID, 'alex-area')))
     except:
         pass
     else:
@@ -422,7 +439,7 @@ def NewsArticleForDaum(cat, url):
                 more_button.is_displayed()
             except:
                 try:
-                    element = WebDriverWait(driver, 1.5).until(
+                    element = WebDriverWait(driver, 2).until(
                         EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
                 except NoSuchElementException:
                     loop = False
@@ -434,11 +451,11 @@ def NewsArticleForDaum(cat, url):
                     pass
             else:
                 try:
-                    element = WebDriverWait(driver, 1).until(
+                    element = WebDriverWait(driver, 2).until(
                         EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
                 except:
                     try:
-                        element = WebDriverWait(driver, 1).until(
+                        element = WebDriverWait(driver, 2).until(
                             EC.presence_of_element_located((By.CLASS_NAME, commentsByclass)))
                     except NoSuchElementException:
                         loop = False
@@ -471,7 +488,10 @@ def NewsArticleForDaum(cat, url):
         comments = list(map(lambda x: (x.find('p', class_ = 'desc_txt').text, x.find('button',class_ = '#like').text, x.find('button',class_ = '#dislike').text), comments))
         comment_Df = pd.DataFrame(comments)
         comment_Df.rename({0: 'comments', 1: r'공감', 2: r'비공감'}, axis=True, inplace=True)
-        comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
+        if len(comment_Df)> 1:
+            comment_Df = comment_Df.apply(lambda x: CommentsInDaum(x), axis = 1)
+        else:
+            comment_Df = lambda: CommentsInDaum(comment_Df)
         driver.quit()
         print('daum End : Click More Button & Crawling comment')
         print('daum Number of comment : {}'.format(len(comment_Df)))
@@ -498,6 +518,7 @@ def Main_Daum(runDate, xdaysAgo):
         newsList['keywords'] = ''
         newsList['number_of_comment'] = ''
         newsList['real_number_of_comment'] = ''
+        newsList['keywords'] = ''
         for idx2 in newsList.index:
             data2 = newsList.loc[idx2]
             newsLink = data2['link']
@@ -524,6 +545,7 @@ def Main(site,db_name, runDate, xdaysAgo):
     dbname = db_name
     useDb = dh.Use_Database(mongodb, dbname)
     slack = cb.Slacker(cb.slacktoken())
+    slack.chat.post_message('# general', 'Start : {}'.format(site))
     startTime = datetime.now()
     if site.lower() == 'naver':
         newsDf, commentsDf = Main_Naver(runDate, xdaysAgo)

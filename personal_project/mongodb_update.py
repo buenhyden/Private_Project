@@ -22,11 +22,11 @@ def isElementPresent(driver, locator):
     except NoSuchElementException:
         return False
     return True
-def SearchKeywordsFromDaumForNaver(title, press):
-    driver = webdriver.Chrome('../chromedriver')
-    #driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+def SearchKeywordsFromDaumForNaver(title):
+    #driver = webdriver.Chrome('../chromedriver')
+    driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     driver.get('http:www.daum.net')
-    tf_keyword = title + '&' + press
+    tf_keyword = title
     element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'tf_keyword')))
     element.send_keys(tf_keyword)
     button = driver.find_element_by_css_selector('#daumSearch > fieldset > div > div > button')
@@ -49,7 +49,28 @@ def SearchKeywordsFromDaumForNaver(title, press):
             keywords = list(map(lambda x: re.sub('#', '', x), keywords))
     driver.quit()
     return keywords
-
+def SearchKeywordsFromDaumForNaver2(title):
+    daumSearch = 'https://search.daum.net/search?w=tot&DA=YZR&t__nil_searchbox=btn&sug=&sugo=&q='
+    res = requests.get(daumSearch + title)
+    soup = BeautifulSoup(res.content, 'html.parser')
+    try:
+        link = soup.select_one('#clusterResultUL > li > div.wrap_cont > div > span > a')
+        driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+        driver.get(link.attrs['href'])
+        element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
+    except:
+        driver.quit()
+        keywords = 'NaN'
+    else:
+        if isElementPresent(driver, 'tag_relate') == False:
+            keywords = 'NaN'
+        else:
+            element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
+            keywords = driver.find_elements_by_class_name('tag_relate')
+            keywords = list(map(lambda x: x.text, keywords))
+            keywords = list(map(lambda x: re.sub('#', '', x), keywords))
+        driver.quit()
+    return keywords
 if __name__=='__main__':
     site = 'Naver'
     collection = 'newsNaver'
@@ -61,9 +82,12 @@ if __name__=='__main__':
     dataList = useCollection.find({'site': site})
     for data in dataList:
         if not 'keywords' in data.keys():
-            keywords = SearchKeywordsFromDaumForNaver(data['title'], data['press'])
+            keywords = SearchKeywordsFromDaumForNaver2(data['title'])
             useCollection.update({"_id": data['_id']},{'$set': {"keywords": keywords}})
-        #
-        #elif 'keywords' in data.keys() and data['keywords'] =='NaN':
-        #    keywords = SearchKeywordsFromDaumForNaver(data['title'], data['press'])
-        #    useCollection.update({"_id": data['_id']},{'$set': {"keywords": keywords}})
+            print (keywords)
+
+        elif 'keywords' in data.keys() and data['keywords'] =='NaN':
+            keywords = SearchKeywordsFromDaumForNaver2(data['title'])
+            useCollection.update({"_id": data['_id']},{'$set': {"keywords": keywords}})
+            print(keywords)
+
