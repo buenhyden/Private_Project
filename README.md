@@ -20,9 +20,9 @@
 >> * 키워드를 제공해주지 않아 다음에서 동일한 기사를 찾아 키워드를 찾아서 크롤링함. 없는 경우에는 NaN으로 처리함.  
 >> * keyword를 추출하는 알고리즘을 이용하여 추가로 키워드를 추출. 
 >> 
->> | category | date | link | press | rank | title | mainText | number of comments |  real comment | site |  
->> |:------------|:------:|:-----:|:-------:|:------:|:----:|:-------------:|:----------------------------:|:--------------------:|------:|
->> | category | date | link | press | rank | title | mainText | number of comments |  real comment | site |  
+>> | category | date | link | press | rank | title | mainText | number of comments |  real comment | site | keywords |  
+>> |:------------|:------:|:-----:|:-------:|:------:|:----:|:-------------:|:----------------------------:|:--------------------:|:----:|--------------:|
+>> | category | date | link | press | rank | title | mainText | number of comments |  real comment | site | keywords |  
 >
 > 2. 해당 뉴스에 대한 전체 댓글 내용과 각 댓글의 공감/비공감 수.  
 >>   
