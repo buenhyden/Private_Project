@@ -399,9 +399,16 @@ def NewsArticleForDaum(cat, url):
     print('daum Start : Search Main Text')
     element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'article_view')))
     article = driver.find_element_by_class_name('article_view')
+<<<<<<< HEAD
     article = article.find_elements_by_css_selector('section')
     article = ' '.join(list(map(lambda x: x.text.strip(), article)))
     article = ' '.join(list(map(lambda xx: xx.strip(), x3.split(u'\xa0'))))
+=======
+    article = article.find_elements_by_css_selector('section > div')
+    article = ' '.join(list(map(lambda x: x.text.strip(), article)))
+    article = ' '.join(list(map(lambda x: x.strip(), article.split(u'\xa0'))))
+    articel = ' '.join(list(map(lambda x: x.strip(), article.split('\n'))))
+>>>>>>> d201ece0058822acfe2194df9bc475e3e65dd468
     print('daum End : Search Main Text')
     print('daum Start : Search Keywords')
     if isElementPresent(driver, 'tag_relate') == False:
