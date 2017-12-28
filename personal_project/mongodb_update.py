@@ -23,8 +23,8 @@ def isElementPresent(driver, locator):
         return False
     return True
 def SearchKeywordsFromDaumForNaver(title):
-    #driver = webdriver.Chrome('../chromedriver')
-    driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+    driver = webdriver.Chrome('../chromedriver')
+    #driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     driver.get('http:www.daum.net')
     tf_keyword = title
     element = WebDriverWait(driver, 2).until(EC.presence_of_element_located((By.CLASS_NAME, 'tf_keyword')))
@@ -55,7 +55,8 @@ def SearchKeywordsFromDaumForNaver2(title):
     soup = BeautifulSoup(res.content, 'html.parser')
     try:
         link = soup.select_one('#clusterResultUL > li > div.wrap_cont > div > span > a')
-        driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
+        driver = webdriver.Chrome('../chromedriver')
+        #driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
         driver.get(link.attrs['href'])
         element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
     except:
@@ -86,8 +87,8 @@ if __name__=='__main__':
             useCollection.update({"_id": data['_id']},{'$set': {"keywords": keywords}})
             print (keywords)
 
-        elif 'keywords' in data.keys() and data['keywords'] =='NaN':
-            keywords = SearchKeywordsFromDaumForNaver2(data['title'])
-            useCollection.update({"_id": data['_id']},{'$set': {"keywords": keywords}})
-            print(keywords)
+        #elif 'keywords' in data.keys() and data['keywords'] =='NaN':
+        #    keywords = SearchKeywordsFromDaumForNaver2(data['title'])
+        #    useCollection.update({"_id": data['_id']},{'$set': {"keywords": keywords}})
+        #    print(keywords)
 

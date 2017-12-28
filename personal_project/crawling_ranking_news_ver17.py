@@ -399,8 +399,9 @@ def NewsArticleForDaum(cat, url):
     print('daum Start : Search Main Text')
     element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'article_view')))
     article = driver.find_element_by_class_name('article_view')
-    article = article.find_elements_by_tag_name('p')
+    article = article.find_elements_by_css_selector('section')
     article = ' '.join(list(map(lambda x: x.text.strip(), article)))
+    article = ' '.join(list(map(lambda xx: xx.strip(), x3.split(u'\xa0'))))
     print('daum End : Search Main Text')
     print('daum Start : Search Keywords')
     if isElementPresent(driver, 'tag_relate') == False:
@@ -485,6 +486,7 @@ def NewsArticleForDaum(cat, url):
         soup = BeautifulSoup(driver.page_source, 'html.parser')
         comments = soup.select('#alex-area > div > div > div > div.cmt_box > ul.list_comment > li > div.cmt_info')
         comments = list(filter(lambda x: x.select_one('p.desc_txt > em.emph_txt') == None, comments))
+        comments = list(filter(lambda x: x.find('p', class_ = 'desc_txt').text !=None, comments))
         comments = list(map(lambda x: (x.find('p', class_ = 'desc_txt').text, x.find('button',class_ = '#like').text, x.find('button',class_ = '#dislike').text), comments))
         comment_Df = pd.DataFrame(comments)
         comment_Df.rename({0: 'comments', 1: r'공감', 2: r'비공감'}, axis=True, inplace=True)
