@@ -100,7 +100,8 @@
 >> 20만건  
 
 ## 7. 감정 분석  
->  
+> package : gensim, sklearn, etc.
+> Doc2Vec을 활용하여 분석을 실시.
 
 ## 8. 웹 구축. 
 > Flask를 이용하여 Amazone Web Service(AWS)에 웹 구축 (예정). 
