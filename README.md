@@ -1,6 +1,7 @@
 # Personal Project   
 ------------------------------------------------------------------------------------------------------------  
 # Description  
+## Object
 ## 1. 데이터 수집.  
 > * package : selenium, requests, BeautifulSoup, etc.  
 > 
