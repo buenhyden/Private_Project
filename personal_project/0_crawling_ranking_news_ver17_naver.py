@@ -549,8 +549,9 @@ def Main(site,db_name, runDate, xdaysAgo):
     mongodb = dh.ToMongoDB(*dh.AWS_MongoDB_Information())
     dbname = db_name
     useDb = dh.Use_Database(mongodb, dbname)
+    targetDate = runDate - timedelta(days=xdaysAgo)
     slack = cb.Slacker(cb.slacktoken())
-    slack.chat.post_message('# general', 'Start : {}'.format(site))
+    slack.chat.post_message('# general', 'Start : {}, targetData : {} '.format(site, targetDate.strftime('%Y%m%d')))
     startTime = datetime.now()
     if site.lower() == 'naver':
         newsDf, commentsDf = Main_Naver(runDate, xdaysAgo)
@@ -570,7 +571,6 @@ def Main(site,db_name, runDate, xdaysAgo):
     print ('End Uploading')
     endTime = datetime.now()
     uploadTime = endTime - middleTime
-    targetDate = runDate - timedelta(days=xdaysAgo)
     outcome_info = '{}, news : {}, comment : {}'.format(site, len(newsDf), len(commentsDf))
     date_info = 'run date : {}, target date : {}'.format(runDate.strftime('%Y%m%d'), targetDate.strftime('%Y%m%d'))
     time_info = 'running time : {}, uploading time'.format(runningTime, uploadTime)
