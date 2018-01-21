@@ -554,10 +554,10 @@ def Main(site,db_name, runDate, xdaysAgo):
     startTime = datetime.now()
     if site.lower() == 'naver':
         newsDf, commentsDf = Main_Naver(runDate, xdaysAgo)
-        newsCollectionName = 'newsNaver'
+        newsCollectionName = 'newsNaver2018'
     elif site.lower() == 'daum':
         newsDf, commentsDf = Main_Daum(runDate, xdaysAgo)
-        newsCollectionName = 'newsDaum'
+        newsCollectionName = 'newsDaum2018'
     else:
         raise NotMatch('Not Match site')
     middleTime = datetime.now()
@@ -565,7 +565,7 @@ def Main(site,db_name, runDate, xdaysAgo):
     print ('Start Uploading')
     useCollection_daum_news = dh.Use_Collection(useDb, newsCollectionName)
     useCollection_daum_news.insert_many(newsDf.to_dict('records'))
-    useCollection_comment = dh.Use_Collection(useDb, 'comments')
+    useCollection_comment = dh.Use_Collection(useDb, 'comments2018')
     useCollection_comment.insert_many(commentsDf.to_dict('records'))
     print ('End Uploading')
     endTime = datetime.now()
@@ -583,7 +583,7 @@ os = 'windows'
 browser = 'chrome'
 if __name__ == "__main__":
     site = 'naver'
-    xdaysAgo = '1'
+    xdaysAgo = sys.argv[1]
     xdaysAgo = int(xdaysAgo)
     runDate = datetime.now().date()
     Main(site, 'hy_db', runDate, xdaysAgo)
