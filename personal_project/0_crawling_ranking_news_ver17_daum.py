@@ -22,7 +22,7 @@ from functools import partial
 def OS_Driver(os,browser):
     if os.lower() == 'windows':
         if browser.lower() == 'phantom':
-            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-window/bin/phantomjs.exe')
+            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-windows/bin/phantomjs.exe')
         else:
             driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     elif os.lower() == 'mac':
