@@ -22,7 +22,7 @@ from functools import partial
 def OS_Driver(os,browser):
     if os.lower() == 'windows':
         if browser.lower() == 'phantom':
-            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-windows/bin/phantomjs.exe')
+            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-window/bin/phantomjs.exe')
         else:
             driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
     elif os.lower() == 'mac':
@@ -579,7 +579,7 @@ def Main(site,db_name, runDate, xdaysAgo):
     slack.chat.post_message('# general', time_info)
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
-os = 'windows'
+os = 'mac'
 browser = 'chrome'
 if __name__ == "__main__":
     site = 'naver'
