@@ -581,7 +581,7 @@ def Main(site,db_name, runDate, xdaysAgo):
     slack.chat.post_message('# general', time_info)
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
-os = 'mac'
+os = 'windows'
 browser = 'chrome'
 if __name__ == "__main__":
     site = 'daum'
