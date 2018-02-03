@@ -253,6 +253,9 @@ class GetContents:
                    range(1, numPage + 1)]
         comment = list(itertools.chain.from_iterable(comment))
         comment = pd.DataFrame(comment)
+        comment = comment[['contents', 'antipathyCount', 'sympathyCount']]
+        comment.rename({'antipathyCount': '비공감',
+                        'sympathyCount': '공감'}, inplace=True, axis=1)
         return comment, totalCount, comment.shape[0]
 
 def Main_Naver(date):
