@@ -19,13 +19,13 @@ import Database_Handler as dh
 from multiprocessing import Pool
 from functools import partial
 # [Default]
-def OS_Driver(os,browser):
-    if os.lower() == 'windows':
+def OS_Driver(browser):
+    if sys.platform=='win32':
         if browser.lower() == 'phantom':
-            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-window/bin/phantomjs.exe')
+            driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-windows/bin/phantomjs.exe')
         else:
             driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
-    elif os.lower() == 'mac':
+    elif sys.platform == 'darwin':
         if browser.lower() == 'phantom':
             driver = webdriver.PhantomJS(
                 '/Users/hyunyoun/Documents/GitHub/Private_Project/phantomjs-2.1.1/bin/phantomjs')
@@ -95,8 +95,8 @@ def CategoryWebPathForNaver(date, mainpage, url):
 # Search for news list in category
 def NewsListInCategoryForNaver(date, mainpage, cat, url):
     if cat == r'연예':
-        global os, browser
-        driver = OS_Driver(os, browser)
+        global browser
+        driver = OS_Driver(browser)
         driver.get(url)
         newsSelector = '#ranking_list > li > div.tit_area'
         element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CSS_SELECTOR, newsSelector)))
@@ -127,8 +127,8 @@ def NewsDataInNaver(date, cat, mainpage, source):
 # Revision 2017-12-08
 # Search for News Article & Press & Comment
 def Article_Comment_InNaver(cat, url):
-    global os, browser
-    driver = OS_Driver(os, browser)
+    global browser
+    driver = OS_Driver(browser)
     if cat == r'연예':
         commentByClass = 'reply_count' ; commentNumByClass = 'u_cbox_count' ;
         mainTextId = 'articeBody' ; pressClass = 'press_logo'
@@ -327,8 +327,8 @@ def SearchKeywordsFromDaumForNaver(title):
     soup = BeautifulSoup(res.content, 'html.parser')
     try:
         link = soup.select_one('#clusterResultUL > li > div.wrap_cont > div > span > a')
-        global os, browser
-        driver = OS_Driver(os, browser)
+        global browser
+        driver = OS_Driver(browser)
         driver.get(link.attrs['href'])
         element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'tag_relate')))
     except:
@@ -395,8 +395,8 @@ def isElementPresent(driver, locator):
     return True
 # Search for article in news
 def NewsArticleForDaum(cat, url):
-    global os, browser
-    driver = OS_Driver(os, browser)
+    global browser
+    driver = OS_Driver(browser)
     driver.get(url)
     print('daum Start : Search Main Text')
     element = WebDriverWait(driver, 3).until(EC.presence_of_element_located((By.CLASS_NAME, 'article_view')))
@@ -581,7 +581,6 @@ def Main(site,db_name, runDate, xdaysAgo):
     slack.chat.post_message('# general', time_info)
     slack.chat.post_message('# general', 'Complete Upload In AWS Mongodb')
     mongodb.close()
-os = 'windows'
 browser = 'chrome'
 if __name__ == "__main__":
     site = 'daum'

@@ -1,6 +1,7 @@
 #
 # Reference : https://github.com/forkonlp/N2H4
 # chage from R code to Python code
+#
 import sys
 import requests
 from bs4 import BeautifulSoup
@@ -20,13 +21,13 @@ from selenium.webdriver.common.by import By
 import itertools
 import multiprocessing
 
-def OS_Driver(os,browser):
-    if os.lower() == 'windows':
+def OS_Driver(browser):
+    if sys.platform=='win32':
         if browser.lower() == 'phantom':
             driver = webdriver.PhantomJS('C:/Users/pc/Documents/phantomjs-2.1.1-windows/bin/phantomjs.exe')
         else:
             driver = webdriver.Chrome('C:/Users/pc/Documents/chromedriver.exe')
-    elif os.lower() == 'mac':
+    elif sys.platform == 'darwin':
         if browser.lower() == 'phantom':
             driver = webdriver.PhantomJS(
                 '/Users/hyunyoun/Documents/GitHub/Private_Project/phantomjs-2.1.1/bin/phantomjs')
@@ -111,7 +112,7 @@ class Crawling_In_Naver():
         return newslist
     def EntertainNewsList(self):
         df_category = Crawling_In_Naver(self.date.strftime('%Y%m%d')).Category_And_Link()
-        driver = OS_Driver('windows','chrome')
+        driver = OS_Driver('chrome')
         driver.get(df_category.loc['연예']['link'])
         soup2 = BeautifulSoup(driver.page_source, 'html.parser')
         newsSelector = '#ranking_list > li > div.tit_area'
@@ -130,28 +131,35 @@ class GetContents:
         self.data = data
 
     def GetAllContents(self):
-        self.driver = OS_Driver('windows', 'chrome')
+        self.driver = OS_Driver('chrome')
         self.driver.get(self.data['link'])
-        pressClassList = ['logo', 'press_logo']
+        pressClassList = ['press_logo','logo']
         if self.cat == r'연예':
             mainTextId = 'articeBody'
             title = self.driver.find_element_by_class_name('end_tit').text
         elif self.cat == r'스포츠':
             mainTextId = 'newsEndContents'
-            title = self.driver.find_element_by_class_name('title').text
+            try:
+                title = self.driver.find_element_by_class_name('info_tit').text
+            except:
+                title = self.driver.find_element_by_class_name('title').text
         else:
             mainTextId = 'articleBodyContents'
             title = self.driver.find_element_by_class_name('tts_head').text
         try:
             element = WebDriverWait(self.driver, 3).until(
                 EC.presence_of_element_located((By.CLASS_NAME, pressClassList[0])))
-            press = self.driver.find_element_by_class_name(pressClassList[0]).find_element_by_tag_name(
-                'img').get_attribute('alt')
+            try:
+                press = self.driver.find_element_by_class_name(pressClassList[0]).find_element_by_tag_name('img').get_attribute('alt')
+            except:
+                press = self.driver.find_element_by_class_name(pressClassList[0]).text
         except:
             element = WebDriverWait(self.driver, 3).until(
                 EC.presence_of_element_located((By.CLASS_NAME, pressClassList[1])))
-            press = self.driver.find_element_by_class_name(pressClassList[1]).find_element_by_tag_name(
-                'img').get_attribute('alt')
+            try:
+                press = self.driver.find_element_by_class_name(pressClassList[1]).find_element_by_tag_name('img').get_attribute('alt')
+            except:
+                press = self.driver.find_element_by_class_name(pressClassList[1]).text
         articleIdList = ['articeBody', 'newsEndContents', 'articleBodyContents']
         try:
             mainText = self.driver.find_element_by_id(mainTextId)
@@ -252,13 +260,9 @@ class GetContents:
                    range(1, numPage + 1)]
         comment = list(itertools.chain.from_iterable(comment))
         comment = pd.DataFrame(comment)
-        if comment.shape[0] != 0:
-            comment = comment[['contents', 'antipathyCount', 'sympathyCount']]
-            comment.rename({'antipathyCount': '비공감',
-                            'contents': 'comments',
-                            'sympathyCount': '공감'}, inplace=True, axis=1)
-        else:
-            comment = pd.DataFrame(columns=['comments', '공감', '비공감'])
+        comment = comment[['contents', 'antipathyCount', 'sympathyCount']]
+        comment.rename({'antipathyCount': '비공감',
+                        'sympathyCount': '공감'}, inplace=True, axis=1)
         return comment, totalCount, comment.shape[0]
 
 def Main_Naver(date):
@@ -282,7 +286,6 @@ def Main_Naver(date):
         for idx2 in contents.index:
             data = contents.loc[idx2]
             rank = idx2+1
-            print (data['link'])
             title, press, mainText, keywords = GetContents(data, cat).GetAllContents()
             comments, nc, rnc = GetContents(data, cat).GetAllComments()
             df_list.append({'category' : cat, 'rank': rank, 'title' : title, 'press' : press, 'keywords' : keywords, 'mainText' : mainText,
