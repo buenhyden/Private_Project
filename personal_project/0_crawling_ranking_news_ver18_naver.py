@@ -259,10 +259,13 @@ class GetContents:
         comment = [GetContents(self.data, self.cat).GetComments(100, idx)['result']['commentList'] for idx in
                    range(1, numPage + 1)]
         comment = list(itertools.chain.from_iterable(comment))
-        comment = pd.DataFrame(comment)
-        comment = comment[['contents', 'antipathyCount', 'sympathyCount']]
-        comment.rename({'antipathyCount': '비공감',
+        if comment.shape[0] != 0:
+            comment = pd.DataFrame(comment)
+            comment = comment[['contents', 'antipathyCount', 'sympathyCount']]
+            comment.rename({'antipathyCount': '비공감', 'contents' : 'comments',
                         'sympathyCount': '공감'}, inplace=True, axis=1)
+        else:
+            comment = pd.DataFrame(columns = ['comments', '공감','비공감'])
         return comment, totalCount, comment.shape[0]
 
 def Main_Naver(date):
