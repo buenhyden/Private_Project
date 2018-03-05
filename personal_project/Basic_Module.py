@@ -299,3 +299,100 @@ def Plot_Roc_Curver_Micro_Macro(lg, rf, ksvm, xgbo):
         xgbo[0]['macro'], xgbo[1]['macro'], label='XGBoost (area = {0:0.2f})'.format(xgbo[2]['macro']))
     plt.legend(loc="lower center", bbox_to_anchor=(0.5, -0.35))
     plt.show()
+
+def LoadClassifier(filePath):
+    import xgboost as xgb
+    import os
+    import re
+    import pickle
+    from keras.models import load_model
+    import multiprocessing
+    cores = int(multiprocessing.cpu_count())
+    fileName = os.path.split(filePath)[1]
+    cls_type = re.split('_', fileName)[0]
+    if cls_type == 'XGBoost':
+        model = xgb.Booster({'nthread' : cores})
+        model.load_model(filePath)
+    elif cls_type == 'NeuralNetwork':
+        cls_type = cls_type+'_'+ re.split('_', fileName)[1]
+        model = load_model(filePath)
+    else:
+        model = pickle.load(open(filePath, 'rb'))
+    print (cls_type)
+    return cls_type, model
+
+def PredictNewsClassification(infer_vec, clsName, classifier):
+    from sklearn.preprocessing import scale
+    import numpy as np
+    from tqdm import tqdm
+    import xgboost as xgb
+    tqdm.pandas(desc="progress-bar")
+    if clsName.startswith('XGBoost'):
+        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
+        vecs_w2v = scale(vecs_w2v)
+        dData = xgb.DMatrix(vecs_w2v)
+        pred = classifier.predict(dData)
+        del dData
+    elif clsName.startswith('NeuralNetwork'):
+        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
+        vecs_w2v = scale(vecs_w2v)
+        pred = classifier.predict_classes(vecs_w2v)
+    else:
+        pred = classifier.predict(infer_vec)
+    return clsName, pred
+
+def MakeTaggedDataDAUM(df, taggedDoc, tagger, stopwords, site):
+    from tqdm import tqdm
+    tqdm.pandas(desc="progress-bar")
+    w2v_docs = list()
+    for idx in tqdm(df.index):
+        text = df.loc[idx, 'title'] + '.\n' + df.loc[idx,'mainText']
+        pos = nav_tokenizer(tagger, text, stopwords)
+        category = 'undecided'
+        label = [site + '_news_' + str(idx)]
+        w2v_docs.append(taggedDoc(pos, label, category))
+    return w2v_docs
+
+def nav_tokenizer(tagger, corpus, stopwords):
+    pos = tagger.pos(corpus)
+    pos = ['/'.join(t) for t in pos if not t[0] in stopwords]
+    return pos
+
+
+def Make_Pre_Data_For_DAUM(model, tfidf, size, data):
+    from datetime import datetime
+    import numpy as np
+    from sklearn.preprocessing import scale
+    from tqdm import tqdm
+    tqdm.pandas(desc="progress-bar")
+    start = datetime.now()
+    print(str(model))
+    wv = [model[w] for w in tqdm(model.wv.vocab.keys())]
+    process1 = datetime.now()
+    print('running time : {}'.format(process1 - start))
+
+    print('Vectorizing Data')
+    vecs_w2v = np.concatenate(
+        [buildWordVector(z, model, size, tfidf) for z in tqdm(map(lambda x: x.words, data))])
+    print('scaling Data')
+    vecs_w2v = scale(vecs_w2v)
+    process2 = datetime.now()
+    print('total running time : {}'.format(process2 - start))
+    return wv, vecs_w2v
+
+def nav_tokenizer2(tagger, corpus, stopwords):
+    pos = tagger.pos(corpus)
+    pos = [t[0] for t in pos if not t[0] in stopwords]
+    return pos
+
+def MakeTaggedDataDAUM2(df, taggedDoc, tagger, stopwords, site):
+    from tqdm import tqdm
+    tqdm.pandas(desc="progress-bar")
+    w2v_docs = list()
+    for idx in tqdm(df.index):
+        text = df.loc[idx, 'title'] + '.\n' + df.loc[idx,'mainText']
+        pos = nav_tokenizer(tagger, text, stopwords)
+        category = 'undecided'
+        label = [site + '_news_' + str(idx)]
+        w2v_docs.append(taggedDoc(pos, label, category))
+    return w2v_docs
