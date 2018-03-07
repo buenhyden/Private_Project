@@ -427,3 +427,26 @@ def ExtractModelType(modelName):
         modelType = modelType1 + '_' + modelType2
     modelIs = '{}_{}'.format(modelIs,modelType)
     return modelIs
+
+def PredictSentiment(infer_vec, clsName, classifier):
+    from sklearn.preprocessing import scale
+    import numpy as np
+    from tqdm import tqdm
+    import xgboost as xgb
+    from itertools import chain
+    tqdm.pandas(desc="progress-bar")
+    if clsName.startswith('XGBoost'):
+        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
+        vecs_w2v = scale(vecs_w2v)
+        dData = xgb.DMatrix(vecs_w2v)
+        pred = classifier.predict(dData)
+        pred = pred.round()
+        del dData
+    elif clsName.startswith('NeuralNetwork'):
+        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
+        vecs_w2v = scale(vecs_w2v)
+        pred = classifier.predict_classes(vecs_w2v)
+        pred = np.array(list(chain.from_iterable(pred)))
+    else:
+        pred = classifier.predict(infer_vec)
+    return clsName, pred
