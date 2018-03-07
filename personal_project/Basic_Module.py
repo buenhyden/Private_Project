@@ -391,8 +391,39 @@ def MakeTaggedDataDAUM2(df, taggedDoc, tagger, stopwords, site):
     w2v_docs = list()
     for idx in tqdm(df.index):
         text = df.loc[idx, 'title'] + '.\n' + df.loc[idx,'mainText']
-        pos = nav_tokenizer(tagger, text, stopwords)
+        pos = nav_tokenizer2(tagger, text, stopwords)
         category = 'undecided'
         label = [site + '_news_' + str(idx)]
         w2v_docs.append(taggedDoc(pos, label, category))
     return w2v_docs
+
+def ExtractModelType(modelName):
+    import re, os
+    fileName = os.path.split(modelName)[1]
+    modelIs = re.search('(Doc2Vec)|(word2vec)|(fastText)', fileName)
+    modelIs = modelIs.group()
+    if modelIs == 'Doc2Vec':
+        modelType = re.search('(dbow)|(dm-c)|(dm-m)', fileName)
+        modelType = modelType.group()
+    elif modelIs == 'word2vec':
+        modelType1 = re.search('(sg-[0-1])', fileName)
+        modelType1 = modelType1.group()
+        if re.search('[0-1]', modelType1).group() == '1':
+            modelType1 = 'skip-gram'
+        else:
+            modelType1 = 'CBOW'
+        modelType2 = re.search('cbow_mean-[0-1]', fileName)
+        modelType2 = modelType2.group()
+        modelType = modelType1 + '_' + modelType2
+    elif modelIs == 'fastText':
+        modelType1 = re.search('(sg-[0-1])', fileName)
+        modelType1 = modelType1.group()
+        if re.search('[0-1]', modelType1).group() == '1':
+            modelType1 = 'skip-gram'
+        else:
+            modelType1 = 'CBOW'
+        modelType2 = re.search('cbow_mean-[0-1]', fileName)
+        modelType2 = modelType2.group()
+        modelType = modelType1 + '_' + modelType2
+    modelIs = '{}_{}'.format(modelIs,modelType)
+    return modelIs
