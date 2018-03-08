@@ -11,6 +11,22 @@ def AWS_MongoDB_Information():
     webpath = file['webpath']
     return user, password, webpath
 
+def GCP_MongoDB_Information():
+    import pickle
+    file = pickle.load(open('./gcp_mongo_User_Information', 'rb'))
+    user = file['username']
+    password = file['password']
+    dbpath = file['dbPath']
+    return user, password, dbpath
+
+def LOCALHOST_MongoDB_Information():
+    import pickle
+    file = pickle.load(open('./localhost_mongo_User_Information','rb'))
+    user = file['user']
+    password = file['password']
+    dbpath = file['webpath']
+    return user, password, dbpath
+
 def Use_Database(connection, dbname):
     db = connection[dbname]
     return db
