@@ -38,7 +38,7 @@ else:
 def GetNumberOfCommentInDB(row):
     import Database_Handler as dh
     from bson import ObjectId
-    mongodb = dh.ToMongoDB(*dh.AWS_MongoDB_Information())
+    mongodb = dh.ToMongoDB(*dh.GCP_MongoDB_Information())
     dbname = 'hy_db'
     useDB = dh.Use_Database(mongodb, dbname)
     commentCollection = dh.Use_Collection(useDB, 'comments')
