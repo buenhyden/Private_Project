@@ -400,6 +400,8 @@ def MakeTaggedDataDAUM2(df, taggedDoc, tagger, stopwords, site):
 def ExtractModelType(modelName):
     import re, os
     fileName = os.path.split(modelName)[1]
+    tagger = re.search('(-ct)|(-mecab)', fileName)
+    tagger = tagger.group()[1:]
     modelIs = re.search('(Doc2Vec)|(word2vec)|(fastText)', fileName)
     modelIs = modelIs.group()
     if modelIs == 'Doc2Vec':
@@ -425,7 +427,7 @@ def ExtractModelType(modelName):
         modelType2 = re.search('cbow_mean-[0-1]', fileName)
         modelType2 = modelType2.group()
         modelType = modelType1 + '_' + modelType2
-    modelIs = '{}_{}'.format(modelIs,modelType)
+    modelIs = '{}_{}_{}'.format(modelIs,modelType, tagger)
     return modelIs
 
 def PredictSentiment(infer_vec, clsName, classifier):
