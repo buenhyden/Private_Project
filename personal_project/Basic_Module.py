@@ -453,3 +453,20 @@ def PredictSentiment(infer_vec, clsName, classifier):
     else:
         pred = classifier.predict(infer_vec)
     return clsName, pred
+
+def Read_Comments(row):
+    import pandas as pd
+    import Database_Handler as dh
+    mongodb = dh.ToMongoDB(*dh.GCP_MongoDB_Information())
+    dbname = 'hy_db'
+    useDB = dh.Use_Database(mongodb, dbname)
+    commentCollection = dh.Use_Collection(useDB, 'comments')
+    info = {'site': row['site'],
+            'category': row['category'],
+            'date': row['date'],
+            'rank': str(row['rank'])}
+    commentsForNews = commentCollection.find(info)
+    commentsForNews = pd.DataFrame(list(commentsForNews))
+    realNumCount = commentsForNews.shape
+    print(realNumCount)
+    return commentsForNews
