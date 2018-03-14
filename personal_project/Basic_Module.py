@@ -470,3 +470,14 @@ def Read_Comments(row):
     realNumCount = commentsForNews.shape
     print(realNumCount)
     return commentsForNews
+
+def Make_Comments_File(filepath, row):
+    import Basic_Module as bm
+    import os
+    filename = row.name
+    absPath = os.path.join(filepath, filename + '.csv')
+    if os.path.isfile(absPath):
+        pass
+    else:
+        comments = bm.Read_Comments(row)
+        comments.to_csv(absPath, index=None, header=True, encoding='utf-8')
