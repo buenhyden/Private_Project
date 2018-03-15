@@ -481,3 +481,31 @@ def Make_Comments_File(filepath, row):
     else:
         comments = bm.Read_Comments(row)
         comments.to_csv(absPath, index=None, header=True, encoding='utf-8')
+
+def Read_Comments2(row):
+    import pandas as pd
+    import Database_Handler as dh
+    mongodb = dh.ToMongoDB(*dh.GCP_MongoDB_Information())
+    dbname = 'hy_db'
+    useDB = dh.Use_Database(mongodb, dbname)
+    commentCollection = dh.Use_Collection(useDB, 'comments')
+    info = {'site': row['site'],
+            'category': row['category'],
+            'date': row['date'],
+            'rank': int(row['rank'])}
+    commentsForNews = commentCollection.find(info)
+    commentsForNews = pd.DataFrame(list(commentsForNews))
+    realNumCount = commentsForNews.shape
+    print(realNumCount)
+    return commentsForNews
+
+def Make_Comments_File2(filepath, row):
+    import Basic_Module as bm
+    import os
+    filename = row.name
+    absPath = os.path.join(filepath, filename + '.csv')
+    if os.path.isfile(absPath):
+        pass
+    else:
+        comments = bm.Read_Comments2(row)
+        comments.to_csv(absPath, index=None, header=True, encoding='utf-8')
