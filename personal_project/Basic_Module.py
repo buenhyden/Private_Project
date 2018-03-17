@@ -94,9 +94,10 @@ def Make_TSNE2(n_component, model, wv, limit):
     show(plot_tfidf)
 
 def Get_Infer_Vector(docs, model):
-    from tqdm import tqdm
-    tqdm.pandas(desc="progress-bar")
-    return [model.infer_vector(doc.words) for doc in tqdm(docs)]
+    #from tqdm import tqdm
+    #tqdm.pandas(desc="progress-bar")
+    #return [model.infer_vector(doc.words) for doc in tqdm(docs)]
+    return [model.infer_vector(doc.words) for doc in docs]
 
 def Build_tfidf(data):
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -318,7 +319,6 @@ def LoadClassifier(filePath):
         model = load_model(filePath)
     else:
         model = pickle.load(open(filePath, 'rb'))
-    print (cls_type)
     return cls_type, model
 
 def PredictNewsClassification(infer_vec, clsName, classifier):
@@ -437,16 +437,18 @@ def PredictSentiment(infer_vec, clsName, classifier):
     from tqdm import tqdm
     import xgboost as xgb
     from itertools import chain
-    tqdm.pandas(desc="progress-bar")
+    #tqdm.pandas(desc="progress-bar")
     if clsName.startswith('XGBoost'):
-        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
+        #vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
+        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in map(lambda x: x, infer_vec)])
         vecs_w2v = scale(vecs_w2v)
         dData = xgb.DMatrix(vecs_w2v)
         pred = classifier.predict(dData)
         pred = pred.round()
         del dData
     elif clsName.startswith('NeuralNetwork'):
-        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
+        #vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
+        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in map(lambda x: x, infer_vec)])
         vecs_w2v = scale(vecs_w2v)
         pred = classifier.predict_classes(vecs_w2v)
         pred = np.array(list(chain.from_iterable(pred)))
@@ -521,3 +523,40 @@ def Read_CommentsFile(filepath, row):
     df = df[df.comments.str.match('.+[0-9a-zA-Z가-힣ㄱ-하-ㅣ]+')]
     # 댓글중에서 문자가 적어도 하나는 있는 것만.
     return df
+
+
+def TokenizeAndTag(tagger, row, stopwords, tagDoc):
+    pos = nav_tokenizer(tagger, row.comments, stopwords)
+    category = 'comments'
+    label = [row.site + '_' + row.category.strip() + '_' + row.date + '_' + str(row['rank']) + '_' + str(row.name)]
+    return tagDoc(pos, label, category)
+
+def Get_infter_Vectors_For_Comments(path, row, tagger, stopwords, taggedFormat, model):
+    df = Read_CommentsFile(path, row)
+    tagged = df.apply(lambda x: TokenizeAndTag(tagger, x, stopwords, taggedFormat), axis=1).tolist()
+    infer_vectors = Get_Infer_Vector(tagged, model)
+    return df, infer_vectors, row.name
+
+def RunClassifier(rawdata, infer_vectors, path, name):
+    import warnings
+    warnings.filterwarnings('ignore')
+    from glob import glob
+    import pandas as pd
+    classifierList = glob(path + '*' + name)
+    loadClassifierDict = dict(map(lambda x: LoadClassifier(x), classifierList))
+    df = dict(map(lambda x: PredictSentiment(infer_vectors, x, loadClassifierDict[x]), loadClassifierDict))
+    df = pd.DataFrame.from_dict(df)
+    df = rawdata.merge(df, left_index=True, right_index=True)
+    return df
+
+def PipeLineForSentimentAnalysis(dataPath,classifierPath, outcomePath, row, tagger, stopwords, tagDoc, model, name):
+    import os
+    df, infer_vectors, targetNewsId = Get_infter_Vectors_For_Comments(dataPath, row, tagger, stopwords, tagDoc, model)
+    outcomeClassifier = RunClassifier(df, infer_vectors, classifierPath, name)
+    reName = 'outcome_comments_sentiment_for_{}_news_{}'.format(row.site, name)
+    if os.path.isdir(os.path.join(outcomePath, targetNewsId)):
+        outcomeName = os.path.join(outcomePath, targetNewsId, reName+'.csv')
+    else:
+        os.mkdir(os.path.join(outcomePath, targetNewsId))
+        outcomeName = os.path.join(outcomePath, targetNewsId, reName+'.csv')
+    outcomeClassifier.to_csv(outcomeName, index=None, encoding = 'utf-8')
