@@ -520,6 +520,7 @@ def Read_CommentsFile(filepath, row):
     filename = row.name + '.csv'
     absFilePath = os.path.join(filepath, filename)
     df = pd.read_csv(absFilePath, encoding='utf-8', header=0, index_col=None)
+    df = df[~df.comments.isna()]
     df = df[df.comments.str.match('.+[0-9a-zA-Z가-힣ㄱ-하-ㅣ]+')]
     # 댓글중에서 문자가 적어도 하나는 있는 것만.
     return df
