@@ -94,10 +94,9 @@ def Make_TSNE2(n_component, model, wv, limit):
     show(plot_tfidf)
 
 def Get_Infer_Vector(docs, model):
-    #from tqdm import tqdm
-    #tqdm.pandas(desc="progress-bar")
-    #return [model.infer_vector(doc.words) for doc in tqdm(docs)]
-    return [model.infer_vector(doc.words) for doc in docs]
+    from tqdm import tqdm
+    tqdm.pandas(desc="progress-bar")
+    return [model.infer_vector(doc.words) for doc in tqdm(docs)]
 
 def Build_tfidf(data):
     from sklearn.feature_extraction.text import TfidfVectorizer
@@ -437,18 +436,16 @@ def PredictSentiment(infer_vec, clsName, classifier):
     from tqdm import tqdm
     import xgboost as xgb
     from itertools import chain
-    #tqdm.pandas(desc="progress-bar")
+    tqdm.pandas(desc="progress-bar")
     if clsName.startswith('XGBoost'):
-        #vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
-        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in map(lambda x: x, infer_vec)])
+        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
         vecs_w2v = scale(vecs_w2v)
         dData = xgb.DMatrix(vecs_w2v)
         pred = classifier.predict(dData)
         pred = pred.round()
         del dData
     elif clsName.startswith('NeuralNetwork'):
-        #vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
-        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in map(lambda x: x, infer_vec)])
+        vecs_w2v = np.concatenate([z.reshape(1, -1) for z in tqdm(map(lambda x: x, infer_vec))])
         vecs_w2v = scale(vecs_w2v)
         pred = classifier.predict_classes(vecs_w2v)
         pred = np.array(list(chain.from_iterable(pred)))
@@ -561,3 +558,4 @@ def PipeLineForSentimentAnalysis(dataPath,classifierPath, outcomePath, row, tagg
         os.mkdir(os.path.join(outcomePath, targetNewsId))
         outcomeName = os.path.join(outcomePath, targetNewsId, reName+'.csv')
     outcomeClassifier.to_csv(outcomeName, index=None, encoding = 'utf-8')
+
