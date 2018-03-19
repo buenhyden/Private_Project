@@ -529,12 +529,6 @@ def TokenizeAndTag(tagger, row, stopwords, tagDoc):
     label = [row.site + '_' + row.category.strip() + '_' + row.date + '_' + str(row['rank']) + '_' + str(row.name)]
     return tagDoc(pos, label, category)
 
-def Get_infter_Vectors_For_Comments(path, row, tagger, stopwords, taggedFormat, model):
-    df = Read_CommentsFile(path, row)
-    tagged = df.apply(lambda x: TokenizeAndTag(tagger, x, stopwords, taggedFormat), axis=1).tolist()
-    infer_vectors = Get_Infer_Vector(tagged, model)
-    return df, infer_vectors, row.name
-
 def RunClassifier(rawdata, infer_vectors, path, name):
     import warnings
     warnings.filterwarnings('ignore')
