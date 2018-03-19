@@ -525,8 +525,8 @@ def Read_CommentsFile(filepath, row):
 
 def TokenizeAndTag(tagger, row, stopwords, tagDoc):
     pos = nav_tokenizer(tagger, row.comments, stopwords)
-    category = 'comments'
-    label = [row.site + '_' + row.category.strip() + '_' + row.date + '_' + str(row['rank']) + '_' + str(row.name)]
+    category= [row.site + '_' + row.category.strip() + '_' + row.date + '_' + str(row['rank']) + '_' + str(row.name)]
+    label = row._id
     return tagDoc(pos, label, category)
 
 def RunClassifier(rawdata, infer_vectors, path, name):
