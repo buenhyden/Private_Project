@@ -541,15 +541,16 @@ def RunClassifier(rawdata, infer_vectors, path, name):
     df = rawdata.merge(df, left_index=True, right_index=True)
     return df
 
-def PipeLineForSentimentAnalysis(dataPath,classifierPath, outcomePath, row, tagger, stopwords, tagDoc, model, name):
-    import os
-    df, infer_vectors, targetNewsId = Get_infter_Vectors_For_Comments(dataPath, row, tagger, stopwords, tagDoc, model)
-    outcomeClassifier = RunClassifier(df, infer_vectors, classifierPath, name)
-    reName = 'outcome_comments_sentiment_for_{}_news_{}'.format(row.site, name)
-    if os.path.isdir(os.path.join(outcomePath, targetNewsId)):
-        outcomeName = os.path.join(outcomePath, targetNewsId, reName+'.csv')
-    else:
-        os.mkdir(os.path.join(outcomePath, targetNewsId))
-        outcomeName = os.path.join(outcomePath, targetNewsId, reName+'.csv')
-    outcomeClassifier.to_csv(outcomeName, index=None, encoding = 'utf-8')
+def MakeTaggedData_For_Comments(df, taggedDoc, tagger, stopwords):
+    from tqdm import tqdm
+    tqdm.pandas(desc="progress-bar")
+    w2v_docs = list()
+    for idx in tqdm(df.index):
+        data = df.loc[idx]
+        text = data['comments']
+        pos = nav_tokenizer2(tagger, text, stopwords)
+        category = [data.site + '_' + data.category.strip() + '_' + data.date + '_' + str(data['rank']) + '_' + str(data.name)]
+        label = data._id
+        w2v_docs.append(taggedDoc(pos, label, category))
+    return w2v_docs
 
